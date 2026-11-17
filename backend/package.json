@@ -11,8 +11,11 @@
     "prisma:migrate": "prisma migrate dev",
     "db:setup": "tsx src/infrastructure/database/setup.ts && prisma generate",
     "db:apply-3af": "psql -U postgres -p 5437 -d filas_sus -f ../sql/estrutura_3af.sql",
+    "db:seed": "tsx prisma/seed.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/domain/__tests__/domain.test.ts"
+    "test": "tsx --test src/domain/__tests__/domain.test.ts",
+    "test:integration": "tsx --test src/infrastructure/http/__tests__/api.integration.test.ts",
+    "test:all": "tsx --test src/domain/__tests__/domain.test.ts src/infrastructure/http/__tests__/api.integration.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
