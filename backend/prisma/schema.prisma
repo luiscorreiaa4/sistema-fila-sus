@@ -1,0 +1,393 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS (mapeados para os tipos ENUM nativos do PostgreSQL da 3AF)
+// ============================================================================
+
+enum StatusUnidade {
+  ATIVA
+  INATIVA
+
+  @@map("status_unidade")
+}
+
+enum StatusCadastro {
+  ATIVO
+  INATIVO
+
+  @@map("status_cadastro_enum")
+}
+
+enum PossuiDeficiencia {
+  SIM
+  NAO
+  PREFIRO_NAO_INFORMAR
+
+  @@map("possui_deficiencia_enum")
+}
+
+enum SituacaoCns {
+  PENDENTE_CONFIRMACAO
+  CONFIRMADO
+  DIVERGENTE
+
+  @@map("situacao_cns_enum")
+}
+
+enum OrigemCadastro {
+  AUTOATENDIMENTO
+  ASSISTIDO
+
+  @@map("origem_cadastro_enum")
+}
+
+enum NivelAcesso {
+  ATENDENTE
+  PROFISSIONAL_SAUDE
+  ADMINISTRADOR
+
+  @@map("nivel_acesso_enum")
+}
+
+enum SituacaoAcesso {
+  CONVITE_PENDENTE
+  ATIVO
+  BLOQUEADO
+
+  @@map("situacao_acesso_enum")
+}
+
+enum CategoriaServico {
+  CONSULTA
+  PROCEDIMENTO
+  CIRURGIA
+
+  @@map("categoria_servico_enum")
+}
+
+enum ModoAcessoServico {
+  DIRETO
+  REGULADO
+
+  @@map("modo_acesso_servico_enum")
+}
+
+enum StatusServico {
+  ATIVO
+  INATIVO
+
+  @@map("status_servico_enum")
+}
+
+enum SituacaoAgenda {
+  RASCUNHO
+  PUBLICADA
+  BLOQUEADA
+  ENCERRADA
+
+  @@map("situacao_agenda_enum")
+}
+
+enum OrigemMarcacao {
+  APLICATIVO
+  ASSISTIDA
+
+  @@map("origem_marcacao_enum")
+}
+
+enum StatusAgendamento {
+  AGENDADO
+  REALIZADO
+  CANCELADO
+  NAO_REALIZADO
+
+  @@map("status_agendamento_enum")
+}
+
+enum GrupoAtendimento {
+  PRIORITARIO
+  COMUM
+
+  @@map("grupo_atendimento_enum")
+}
+
+enum SituacaoFila {
+  AGUARDANDO
+  CHAMADO
+  EM_ATENDIMENTO
+  CONCLUIDO
+  NAO_ATENDIDO
+  CANCELADO
+
+  @@map("situacao_fila_enum")
+}
+
+enum EstadoChamada {
+  CHAMADO
+  EM_ATENDIMENTO
+  CONCLUIDO
+  NAO_ATENDIDO
+
+  @@map("estado_chamada_enum")
+}
+
+// ============================================================================
+// MODELS (11 tabelas conforme erDiagram e OpenSpec 04)
+// ============================================================================
+
+model UnidadeSaude {
+  id               String        @id @default(uuid()) @db.Uuid
+  cnes             String?       @unique @db.VarChar(7)
+  cnpj             String        @db.VarChar(14)
+  nome             String        @db.VarChar(150)
+  telefone         String?       @db.VarChar(20)
+  email            String?       @db.VarChar(150)
+  cep              String        @db.VarChar(8)
+  logradouro       String        @db.VarChar(200)
+  numero           String        @db.VarChar(20)
+  complemento      String?       @db.VarChar(100)
+  bairro           String        @db.VarChar(100)
+  municipio        String        @db.VarChar(100)
+  estado           String        @db.Char(2)
+  fusoHorario      String        @default("America/Maceio") @map("fuso_horario") @db.VarChar(50)
+  status           StatusUnidade @default(ATIVA)
+  motivoInativacao String?       @map("motivo_inativacao") @db.Text
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  profissionais ProfissionalUnidade[]
+  agendas       Agenda[]
+  agendamentos  Agendamento[]
+  entradasFila  EntradaFila[]
+
+  @@unique([nome, municipio], map: "uq_unidades_nome_municipio")
+  @@map("unidades_saude")
+}
+
+model Paciente {
+  id                         String            @id @default(uuid()) @db.Uuid
+  cpf                        String            @unique @db.Char(11)
+  cns                        String            @unique @db.Char(15)
+  nomeCompleto               String            @map("nome_completo") @db.VarChar(150)
+  nomeSocial                 String?           @map("nome_social") @db.VarChar(150)
+  dataNascimento             DateTime          @map("data_nascimento") @db.Date
+  email                      String?           @unique @db.VarChar(150)
+  celular                    String?           @db.VarChar(20)
+  celularWhatsapp            Boolean           @default(false) @map("celular_whatsapp")
+  possuiDeficiencia          PossuiDeficiencia @default(NAO) @map("possui_deficiencia")
+  tiposDeficiencia           String[]          @default([]) @map("tipos_deficiencia")
+  preferenciasAcessibilidade String?           @map("preferencias_acessibilidade") @db.Text
+  cep                        String            @db.VarChar(8)
+  logradouro                 String            @db.VarChar(200)
+  numero                     String            @db.VarChar(20)
+  complemento                String?           @db.VarChar(100)
+  bairro                     String            @db.VarChar(100)
+  municipio                  String            @db.VarChar(100)
+  estado                     String            @db.Char(2)
+  senhaHash                  String            @map("senha_hash") @db.VarChar(255)
+  cienciaPrivacidadeEm       DateTime          @map("ciencia_privacidade_em") @db.Timestamptz(6)
+  situacaoCns                SituacaoCns       @default(PENDENTE_CONFIRMACAO) @map("situacao_cns")
+  origemCadastro             OrigemCadastro    @default(AUTOATENDIMENTO) @map("origem_cadastro")
+  status                     StatusCadastro    @default(ATIVO)
+  tentativasMalsucedidas     Int               @default(0) @map("tentativas_malsucedidas")
+  bloqueioTemporarioAte      DateTime?         @map("bloqueio_temporario_ate") @db.Timestamptz(6)
+  ultimoAcesso               DateTime?         @map("ultimo_acesso") @db.Timestamptz(6)
+  createdAt                  DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                  DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  agendamentos Agendamento[]
+  entradasFila EntradaFila[]
+
+  @@map("pacientes")
+}
+
+model Profissional {
+  id                     String         @id @default(uuid()) @db.Uuid
+  cpf                    String         @unique @db.Char(11)
+  nomeCompleto           String         @map("nome_completo") @db.VarChar(150)
+  nomeSocial             String?        @map("nome_social") @db.VarChar(150)
+  conselhoProfissional   String?        @map("conselho_profissional") @db.VarChar(30)
+  numeroRegistro         String?        @map("numero_registro") @db.VarChar(30)
+  ufRegistro             String?        @map("uf_registro") @db.Char(2)
+  especialidades         String[]       @default([])
+  email                  String         @unique @db.VarChar(150)
+  celular                String?        @db.VarChar(20)
+  nivelAcesso            NivelAcesso    @map("nivel_acesso")
+  credencialHash         String         @map("credencial_hash") @db.VarChar(255)
+  situacaoAcesso         SituacaoAcesso @default(ATIVO) @map("situacao_acesso")
+  status                 StatusCadastro @default(ATIVO)
+  motivoInativacao       String?        @map("motivo_inativacao") @db.Text
+  tentativasMalsucedidas Int            @default(0) @map("tentativas_malsucedidas")
+  bloqueioTemporarioAte  DateTime?      @map("bloqueio_temporario_ate") @db.Timestamptz(6)
+  ultimoAcesso           DateTime?      @map("ultimo_acesso") @db.Timestamptz(6)
+  createdAt              DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  unidades           ProfissionalUnidade[]
+  agendas            Agenda[]
+  agendamentos       Agendamento[]
+  entradasCheckin    EntradaFila[]         @relation("AtendenteCheckin")
+  chamadasRealizadas ChamadaFila[]
+
+  @@map("profissionais")
+}
+
+model ProfissionalUnidade {
+  profissionalId String   @map("profissional_id") @db.Uuid
+  unidadeId      String   @map("unidade_id") @db.Uuid
+  vinculadoEm    DateTime @default(now()) @map("vinculado_em") @db.Timestamptz(6)
+
+  profissional Profissional @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  unidade      UnidadeSaude @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+
+  @@id([profissionalId, unidadeId])
+  @@map("profissionais_unidades")
+}
+
+model Servico {
+  id                 String            @id @default(uuid()) @db.Uuid
+  nome               String            @db.VarChar(150)
+  categoria          CategoriaServico
+  especialidade      String            @db.VarChar(100)
+  modoAcesso         ModoAcessoServico @default(DIRETO) @map("modo_acesso")
+  orientacoesPreparo String?           @map("orientacoes_preparo") @db.Text
+  status             StatusServico     @default(ATIVO)
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  agendas      Agenda[]
+  agendamentos Agendamento[]
+
+  @@unique([nome, especialidade], map: "uq_servicos_nome_especialidade")
+  @@map("servicos")
+}
+
+model Agenda {
+  id                   String         @id @default(uuid()) @db.Uuid
+  unidadeId            String         @map("unidade_id") @db.Uuid
+  servicoId            String         @map("servico_id") @db.Uuid
+  profissionalId       String?        @map("profissional_id") @db.Uuid
+  dataInicio           DateTime       @map("data_inicio") @db.Date
+  dataFim              DateTime       @map("data_fim") @db.Date
+  diasHorarios         Json           @map("dias_horarios")
+  capacidadePorHorario Int            @map("capacidade_por_horario")
+  situacao             SituacaoAgenda @default(RASCUNHO)
+  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  unidade      UnidadeSaude  @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  servico      Servico       @relation(fields: [servicoId], references: [id], onDelete: Restrict)
+  profissional Profissional? @relation(fields: [profissionalId], references: [id], onDelete: Restrict)
+  vagas        VagaAgenda[]
+
+  @@map("agendas")
+}
+
+model VagaAgenda {
+  id             String   @id @default(uuid()) @db.Uuid
+  agendaId       String   @map("agenda_id") @db.Uuid
+  dataHoraInicio DateTime @map("data_hora_inicio") @db.Timestamptz(6)
+  capacidadeTotal Int     @map("capacidade_total")
+  vagasOcupadas  Int      @default(0) @map("vagas_ocupadas")
+
+  agenda       Agenda        @relation(fields: [agendaId], references: [id], onDelete: Restrict)
+  agendamentos Agendamento[]
+
+  @@index([agendaId, dataHoraInicio], map: "idx_vagas_agenda_disponiveis")
+  @@map("vagas_agenda")
+}
+
+model Agendamento {
+  id                  String            @id @default(uuid()) @db.Uuid
+  pacienteId          String            @map("paciente_id") @db.Uuid
+  unidadeId           String            @map("unidade_id") @db.Uuid
+  servicoId           String            @map("servico_id") @db.Uuid
+  profissionalId      String?           @map("profissional_id") @db.Uuid
+  vagaId              String            @map("vaga_id") @db.Uuid
+  dataHoraAtendimento DateTime          @map("data_hora_atendimento") @db.Timestamptz(6)
+  protocolo           String            @unique @db.VarChar(30)
+  senhaAtendimento    String            @map("senha_atendimento") @db.VarChar(20)
+  versao              Int               @default(1)
+  origemMarcacao      OrigemMarcacao    @default(APLICATIVO) @map("origem_marcacao")
+  status              StatusAgendamento @default(AGENDADO)
+  motivoCancelamento  String?           @map("motivo_cancelamento") @db.Text
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  paciente     Paciente      @relation(fields: [pacienteId], references: [id], onDelete: Restrict)
+  unidade      UnidadeSaude  @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  servico      Servico       @relation(fields: [servicoId], references: [id], onDelete: Restrict)
+  profissional Profissional? @relation(fields: [profissionalId], references: [id], onDelete: Restrict)
+  vaga         VagaAgenda    @relation(fields: [vagaId], references: [id], onDelete: Restrict)
+  entradaFila  EntradaFila?
+
+  @@index([protocolo], map: "idx_agendamentos_protocolo")
+  @@index([pacienteId, status, dataHoraAtendimento], map: "idx_agendamentos_paciente_status")
+  @@map("agendamentos")
+}
+
+model EntradaFila {
+  id                     String           @id @default(uuid()) @db.Uuid
+  agendamentoId          String           @unique @map("agendamento_id") @db.Uuid
+  pacienteId             String           @map("paciente_id") @db.Uuid
+  unidadeId              String           @map("unidade_id") @db.Uuid
+  atendenteResponsavelId String?          @map("atendente_responsavel_id") @db.Uuid
+  dataHoraChegada        DateTime         @default(now()) @map("data_hora_chegada") @db.Timestamptz(6)
+  grupoAtendimento       GrupoAtendimento @map("grupo_atendimento")
+  criterioPrioridade     String           @map("criterio_prioridade") @db.VarChar(30)
+  senhaAtendimento       String           @map("senha_atendimento") @db.VarChar(20)
+  ordemEntrada           Int              @map("ordem_entrada")
+  situacao               SituacaoFila     @default(AGUARDANDO)
+  recolocacoes           Int              @default(0)
+  createdAt              DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  agendamento          Agendamento   @relation(fields: [agendamentoId], references: [id], onDelete: Restrict)
+  paciente             Paciente      @relation(fields: [pacienteId], references: [id], onDelete: Restrict)
+  unidade              UnidadeSaude  @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  atendenteResponsavel Profissional? @relation("AtendenteCheckin", fields: [atendenteResponsavelId], references: [id], onDelete: Restrict)
+  chamadas             ChamadaFila[]
+
+  @@index([unidadeId, situacao, grupoAtendimento, ordemEntrada], map: "idx_entradas_fila_unidade_situacao_ordem")
+  @@map("entradas_fila")
+}
+
+model ChamadaFila {
+  id                     String        @id @default(uuid()) @db.Uuid
+  entradaFilaId          String        @map("entrada_fila_id") @db.Uuid
+  profissionalChamadorId String        @map("profissional_chamador_id") @db.Uuid
+  guicheSala             String        @map("guiche_sala") @db.VarChar(60)
+  dataHoraChamada        DateTime      @default(now()) @map("data_hora_chamada") @db.Timestamptz(6)
+  tentativa              Int           @default(1)
+  estado                 EstadoChamada @default(CHAMADO)
+  dataHoraInicio         DateTime?     @map("data_hora_inicio") @db.Timestamptz(6)
+  dataHoraConclusao      DateTime?     @map("data_hora_conclusao") @db.Timestamptz(6)
+  duracaoMinutos         Int?          @map("duracao_minutos")
+  motivoAusencia         String?       @map("motivo_ausencia") @db.Text
+
+  entradaFila          EntradaFila  @relation(fields: [entradaFilaId], references: [id], onDelete: Restrict)
+  profissionalChamador Profissional @relation(fields: [profissionalChamadorId], references: [id], onDelete: Restrict)
+
+  @@index([dataHoraChamada(sort: Desc)], map: "idx_chamadas_fila_horario")
+  @@map("chamadas_fila")
+}
+
+model HistoricoEvento {
+  id             String   @id @default(uuid()) @db.Uuid
+  entidade       String   @db.VarChar(50)
+  entidadeId     String   @map("entidade_id") @db.Uuid
+  statusAnterior String?  @map("status_anterior") @db.VarChar(50)
+  statusNovo     String   @map("status_novo") @db.VarChar(50)
+  observacao     String?  @db.Text
+  ocorridoEm     DateTime @default(now()) @map("ocorrido_em") @db.Timestamptz(6)
+
+  @@index([entidade, entidadeId], map: "idx_historico_eventos_entidade")
+  @@map("historico_eventos")
+}

@@ -1,0 +1,18 @@
+{
+  "name": "sistema-fila-sus",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo do Sistema de Transparencia de Filas Publicas (SUS) — CESMAC",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "db:setup": "npm --prefix backend run db:setup",
+    "db:apply-3af": "npm --prefix backend run db:apply-3af",
+    "prisma:generate": "npm --prefix backend run prisma:generate",
+    "prisma:migrate": "npm --prefix backend run prisma:migrate",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "node -e \"const { spawn } = require('child_process'); const run = (dir) => spawn('npm', ['--prefix', dir, 'run', 'dev'], { stdio: 'inherit', shell: true }); const b = run('backend'); const f = run('frontend'); const sair = () => { b.kill(); f.kill(); process.exit(); }; process.on('SIGINT', sair); process.on('SIGTERM', sair);\"",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run build",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build"
+  }
+}
