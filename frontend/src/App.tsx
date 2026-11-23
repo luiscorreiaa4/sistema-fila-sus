@@ -1,29 +1,60 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-
-function PaginaInicial() {
-  return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <section className="max-w-xl w-full rounded-xl bg-white p-8 shadow-sm border border-slate-200">
-        <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-          SUS — Transparência de Filas Públicas
-        </span>
-        <h1 className="mt-4 text-2xl font-bold text-slate-900">
-          Ambiente Frontend Inicializado
-        </h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Estrutura base com React, TypeScript, Vite, Tailwind CSS e React Router pronta para os próximos blocos do MVP.
-        </p>
-      </section>
-    </main>
-  );
-}
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { AdminPage } from './pages/AdminPage';
+import { CadastroPacientePage } from './pages/CadastroPacientePage';
+import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { OperacaoPage } from './pages/OperacaoPage';
+import { PacientePage } from './pages/PacientePage';
+import { PainelPublicoPage } from './pages/PainelPublicoPage';
 
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<PaginaInicial />} />
-      </Routes>
+      <ToastProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/painel" element={<PainelPublicoPage />} />
+            <Route path="/painel/:unidadeId" element={<PainelPublicoPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/cadastro" element={<CadastroPacientePage />} />
+
+            <Route
+              path="/paciente"
+              element={
+                <ProtectedRoute allowedRoles={['PACIENTE']}>
+                  <PacientePage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/operacao"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['ATENDENTE', 'PROFISSIONAL_SAUDE', 'ADMINISTRADOR']}
+                >
+                  <OperacaoPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

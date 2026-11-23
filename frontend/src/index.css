@@ -1,3 +1,84 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-primary: #1E6BFF;
+  --color-primary-hover: #1554D9;
+  --gradient-primary: linear-gradient(135deg, #2575FF 0%, #0E4FD6 100%);
+  --color-ice: #EFF4FB;
+  --color-ice-soft: #F4F7FC;
+  --color-card: #FFFFFF;
+  --color-canvas: #F8FAFC;
+  --color-text: #0F172A;
+  --color-text-muted: #64748B;
+  --color-border: #E2E8F0;
+  --color-watermark: #DBEAFE;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--color-text);
+    background-color: var(--color-canvas);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+.bg-cobalt-gradient {
+  background: var(--gradient-primary);
+}
+
+.glass-badge {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-on-cobalt {
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.hero-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.kpi-number {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+@keyframes callHighlight {
+  0% {
+    transform: scale(0.985);
+    box-shadow: 0 0 0 0 rgba(30, 107, 255, 0.45);
+  }
+  40% {
+    transform: scale(1.01);
+    box-shadow: 0 0 0 14px rgba(30, 107, 255, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 14px 32px -10px rgba(30, 107, 255, 0.35);
+  }
+}
+
+.animate-call-highlight {
+  animation: callHighlight 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
