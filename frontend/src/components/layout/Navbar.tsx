@@ -63,12 +63,12 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-4 z-40 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl flex items-center justify-between gap-3">
+    <header className="sticky top-3 sm:top-4 z-40 px-3 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-3 min-w-0">
         {/* Logo */}
         <Link
           to={isAuthenticated ? '/dashboard' : '/'}
-          className="inline-flex items-center gap-2.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E2E8F0] pl-2 pr-4 py-1.5 shadow-pill transition-colors hover:border-[#1E6BFF]/40"
+          className="inline-flex shrink-0 items-center gap-2 sm:gap-2.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E2E8F0] pl-1.5 sm:pl-2 pr-3 sm:pr-4 py-1.5 shadow-pill transition-colors hover:border-[#1E6BFF]/40"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cobalt-gradient text-white">
             <svg
@@ -82,7 +82,7 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
               <path d="M12 5v14M5 12h14" />
             </svg>
           </span>
-          <span className="font-display text-sm font-semibold tracking-tight text-[#0F172A]">
+          <span className="font-display text-sm font-semibold tracking-tight text-[#0F172A] whitespace-nowrap">
             Fila <span className="text-[#1E6BFF]">SUS</span>
           </span>
         </Link>
@@ -119,7 +119,7 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
         </nav>
 
         {/* Ações circulares à direita */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0">
           {/* Painel Rápido */}
           <Link
             to="/painel"
@@ -136,7 +136,7 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setShowUserMenu((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E2E8F0] pl-1.5 pr-3 py-1.5 shadow-pill hover:border-[#1E6BFF]/40 transition-colors"
+                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white border border-[#E2E8F0] pl-1.5 pr-2.5 sm:pr-3 py-1.5 shadow-pill hover:border-[#1E6BFF]/40 transition-colors"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF]">
                   <User className="h-3.5 w-3.5" />
@@ -148,7 +148,7 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-64 rounded-[20px] bg-white border border-[#E2E8F0] p-2 shadow-soft z-50">
+                <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] rounded-[20px] bg-white border border-[#E2E8F0] p-2 shadow-soft z-50">
                   <div className="px-3 py-2 border-b border-[#E2E8F0]/70">
                     <p className="text-xs font-semibold text-[#0F172A] truncate">
                       {usuario.nomeExibicao}
@@ -203,8 +203,9 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-label="Abrir menu"
-            className="md:hidden flex h-10 w-10 items-center justify-center rounded-full bg-white border border-[#E2E8F0] text-[#0F172A] shadow-pill"
+            aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+            aria-expanded={mobileMenuOpen}
+            className="md:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white border border-[#E2E8F0] text-[#0F172A] shadow-pill"
           >
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -220,7 +221,11 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
                 key={item.href}
                 to={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block rounded-2xl px-4 py-2.5 text-sm font-medium text-[#0F172A] hover:bg-[#EFF4FB] hover:text-[#1E6BFF]"
+                className={`block rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                  location.pathname === item.href
+                    ? 'bg-[#EFF4FB] text-[#1E6BFF]'
+                    : 'text-[#0F172A] hover:bg-[#EFF4FB] hover:text-[#1E6BFF]'
+                }`}
               >
                 {item.label}
               </Link>
@@ -235,6 +240,27 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
               </a>
             )
           )}
+
+          <div className="pt-2 mt-2 border-t border-[#E2E8F0] space-y-1">
+            {isAuthenticated && usuario ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair da conta
+              </button>
+            ) : (
+              <Link
+                to="/cadastro"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block rounded-2xl px-4 py-2.5 text-sm font-semibold text-[#1E6BFF] hover:bg-[#EFF4FB]"
+              >
+                Criar conta gratuita →
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </header>

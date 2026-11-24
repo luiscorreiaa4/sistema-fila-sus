@@ -234,9 +234,9 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
       {/* Barra de comando: chamar próximo */}
       <form
         onSubmit={handleChamarProximo}
-        className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col lg:flex-row lg:items-end justify-between gap-4"
+        className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft flex flex-col lg:flex-row lg:items-end justify-between gap-4"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 min-w-0">
           <FormField label="Meu guichê / sala de atendimento" htmlFor="op-guiche" required>
             <TextInput
               id="op-guiche"
@@ -258,12 +258,12 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
           </FormField>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 w-full lg:w-auto shrink-0">
           <button
             type="button"
             onClick={() => void carregarFila(false)}
             title="Atualizar fila agora"
-            className="flex h-12 w-12 items-center justify-center rounded-full border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:text-[#1E6BFF] hover:border-[#1E6BFF]/40 transition-colors"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:text-[#1E6BFF] hover:border-[#1E6BFF]/40 transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
           </button>
@@ -273,6 +273,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
             size="lg"
             loading={chamandoProximo}
             icon={<Megaphone className="h-4 w-4" />}
+            className="flex-1 lg:flex-initial"
           >
             Chamar próximo ({aguardando.length})
           </PillButton>
@@ -308,10 +309,10 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                   return (
                     <article
                       key={item.id}
-                      className="rounded-[24px] bg-white border border-[#1E6BFF]/30 p-5 shadow-soft flex flex-col justify-between gap-4"
+                      className="min-w-0 rounded-[24px] bg-white border border-[#1E6BFF]/30 p-5 shadow-soft flex flex-col justify-between gap-4"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-display text-3xl font-semibold text-[#1E6BFF]">
                               {item.senhaAtendimento}
@@ -328,17 +329,17 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                             </StatusBadge>
                           </div>
 
-                          <h3 className="mt-2 font-display text-lg font-medium text-[#0F172A]">
+                          <h3 className="mt-2 font-display text-lg font-medium text-[#0F172A] break-words">
                             {item.nomeExibicao}
                           </h3>
-                          <p className="text-xs text-[#64748B]">
+                          <p className="text-xs text-[#64748B] break-words">
                             {item.servicoNome} · Protocolo{' '}
                             <code className="text-[#0F172A]">{item.protocolo}</code>
                           </p>
                         </div>
 
                         {item.ultimaChamada && (
-                          <div className="text-right rounded-2xl bg-[#EFF4FB] px-3 py-2 shrink-0">
+                          <div className="text-left sm:text-right rounded-2xl bg-[#EFF4FB] px-3 py-2 shrink-0">
                             <p className="text-xs font-semibold text-[#1E6BFF]">
                               {item.ultimaChamada.guicheSala}
                             </p>
@@ -413,7 +414,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
           </section>
 
           {/* Aguardando na fila */}
-          <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-4">
+          <section className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-display text-lg font-medium text-[#0F172A]">
@@ -431,62 +432,104 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                 Nenhum paciente aguardando check-in ou chamada no momento.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#E2E8F0] text-[11px] uppercase tracking-wider text-[#64748B]">
-                      <th className="py-2.5 pr-4">Senha</th>
-                      <th className="py-2.5 pr-4">Paciente</th>
-                      <th className="py-2.5 pr-4">Serviço</th>
-                      <th className="py-2.5 pr-4">Grupo e critério</th>
-                      <th className="py-2.5 pr-4">Chegada</th>
-                      <th className="py-2.5 text-right">Ordem</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
-                    {aguardando.map((item) => (
-                      <tr key={item.id} className="hover:bg-[#F4F7FC]/70">
-                        <td className="py-3 pr-4 font-display font-semibold text-[#1E6BFF]">
+              <>
+                <div className="md:hidden space-y-3">
+                  {aguardando.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-display text-xl font-semibold text-[#1E6BFF]">
                           {item.senhaAtendimento}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <p className="font-medium text-[#0F172A]">
-                            {item.nomeExibicao}
-                          </p>
-                          <p className="text-[11px] text-[#64748B]">
-                            {item.protocolo}
-                          </p>
-                        </td>
-                        <td className="py-3 pr-4 text-xs text-[#64748B]">
-                          {item.servicoNome}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <StatusBadge
-                              tone={
-                                item.grupoAtendimento === 'PRIORITARIO'
-                                  ? 'warning'
-                                  : 'neutral'
-                              }
-                            >
-                              {LABELS_GRUPO_ATENDIMENTO[item.grupoAtendimento]}
-                            </StatusBadge>
-                            {item.recolocacoes > 0 && (
-                              <StatusBadge tone="info">Recolocado</StatusBadge>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4 text-xs text-[#64748B]">
-                          {formatarHora(item.dataHoraChegada)}
-                        </td>
-                        <td className="py-3 text-right text-xs font-semibold text-[#0F172A]">
-                          #{item.ordemEntrada}
-                        </td>
+                        </span>
+                        <span className="text-xs font-semibold text-[#0F172A]">
+                          Ordem #{item.ordemEntrada} · {formatarHora(item.dataHoraChegada)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#0F172A] break-words">
+                          {item.nomeExibicao}
+                        </p>
+                        <p className="text-[11px] text-[#64748B]">
+                          {item.servicoNome} · {item.protocolo}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <StatusBadge
+                          tone={
+                            item.grupoAtendimento === 'PRIORITARIO'
+                              ? 'warning'
+                              : 'neutral'
+                          }
+                        >
+                          {LABELS_GRUPO_ATENDIMENTO[item.grupoAtendimento]}
+                        </StatusBadge>
+                        {item.recolocacoes > 0 && (
+                          <StatusBadge tone="info">Recolocado</StatusBadge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] text-[11px] uppercase tracking-wider text-[#64748B]">
+                        <th className="py-2.5 pr-4">Senha</th>
+                        <th className="py-2.5 pr-4">Paciente</th>
+                        <th className="py-2.5 pr-4">Serviço</th>
+                        <th className="py-2.5 pr-4">Grupo e critério</th>
+                        <th className="py-2.5 pr-4">Chegada</th>
+                        <th className="py-2.5 text-right">Ordem</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
+                      {aguardando.map((item) => (
+                        <tr key={item.id} className="hover:bg-[#F4F7FC]/70">
+                          <td className="py-3 pr-4 font-display font-semibold text-[#1E6BFF]">
+                            {item.senhaAtendimento}
+                          </td>
+                          <td className="py-3 pr-4">
+                            <p className="font-medium text-[#0F172A]">
+                              {item.nomeExibicao}
+                            </p>
+                            <p className="text-[11px] text-[#64748B]">
+                              {item.protocolo}
+                            </p>
+                          </td>
+                          <td className="py-3 pr-4 text-xs text-[#64748B]">
+                            {item.servicoNome}
+                          </td>
+                          <td className="py-3 pr-4">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <StatusBadge
+                                tone={
+                                  item.grupoAtendimento === 'PRIORITARIO'
+                                    ? 'warning'
+                                    : 'neutral'
+                                }
+                              >
+                                {LABELS_GRUPO_ATENDIMENTO[item.grupoAtendimento]}
+                              </StatusBadge>
+                              {item.recolocacoes > 0 && (
+                                <StatusBadge tone="info">Recolocado</StatusBadge>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4 text-xs text-[#64748B]">
+                            {formatarHora(item.dataHoraChegada)}
+                          </td>
+                          <td className="py-3 text-right text-xs font-semibold text-[#0F172A]">
+                            #{item.ordemEntrada}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </section>
 
@@ -559,12 +602,13 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
               status <strong>Em atendimento</strong>.
             </p>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
               <PillButton
                 variant="ghost"
                 hideIconCircle
                 onClick={() => setEntradaParaIniciar(null)}
                 disabled={acaoEmAndamentoId === entradaParaIniciar.id}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </PillButton>
@@ -576,6 +620,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                   await executarAcaoEntrada(id, 'iniciar');
                   setEntradaParaIniciar(null);
                 }}
+                className="w-full sm:w-auto"
               >
                 Confirmar início
               </PillButton>
@@ -629,11 +674,12 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
               />
             </FormField>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
               <PillButton
                 variant="ghost"
                 hideIconCircle
                 onClick={() => setEntradaAusencia(null)}
+                className="w-full sm:w-auto"
               >
                 Voltar
               </PillButton>
@@ -641,6 +687,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                 type="submit"
                 variant="danger"
                 loading={registrandoAusencia}
+                className="w-full sm:w-auto"
               >
                 Confirmar ausência
               </PillButton>

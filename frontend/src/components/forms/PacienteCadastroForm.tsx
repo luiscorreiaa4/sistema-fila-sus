@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
+import { useViaCep } from '../../hooks/useViaCep';
 import { ApiError, extrairMensagemErro, pacientesApi } from '../../services/api';
 import type {
   CadastrarPacienteInput,
@@ -135,6 +136,26 @@ export function PacienteCadastroForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [erroGeral, setErroGeral] = useState<string | null>(null);
   const [errosCampos, setErrosCampos] = useState<Record<string, string>>({});
+
+  const { buscandoCep, erroCep, buscarCep } = useViaCep({
+    onSuccess: (dados) => {
+      if (dados.logradouro) setLogradouro(dados.logradouro);
+      if (dados.bairro) setBairro(dados.bairro);
+      if (dados.municipio) setMunicipio(dados.municipio);
+      const ufValida = UFS_BRASIL.find((uf) => uf === dados.estado);
+      if (ufValida) setEstado(ufValida);
+
+      setErrosCampos((prev) => {
+        const next = { ...prev };
+        delete next.cep;
+        if (dados.logradouro) delete next.logradouro;
+        if (dados.bairro) delete next.bairro;
+        if (dados.municipio) delete next.municipio;
+        if (ufValida) delete next.estado;
+        return next;
+      });
+    },
+  });
 
   const toggleTipoDeficiencia = (tipo: TipoDeficiencia) => {
     setTiposDeficiencia((prev) =>
@@ -685,22 +706,42 @@ export function PacienteCadastroForm({
             label="CEP"
             htmlFor="pac-cep"
             required
-            error={errosCampos.cep}
+            hint={
+              buscandoCep
+                ? 'Buscando endereço pelo CEP...'
+                : 'Preenchimento automático do endereço ao informar os 8 dígitos.'
+            }
+            error={errosCampos.cep || erroCep || undefined}
             className="sm:col-span-2"
           >
-            <TextInput
-              id="pac-cep"
-              inputMode="numeric"
-              value={cep}
-              onChange={(e) => {
-                const v = maskCep(e.target.value);
-                setCep(v);
-                if (errosCampos.cep) validarCampo('cep', { cep: v });
-              }}
-              onBlur={() => validarCampo('cep')}
-              placeholder="57020-050"
-              hasError={Boolean(errosCampos.cep)}
-            />
+            <div className="relative">
+              <TextInput
+                id="pac-cep"
+                inputMode="numeric"
+                value={cep}
+                onChange={(e) => {
+                  const v = maskCep(e.target.value);
+                  setCep(v);
+                  if (errosCampos.cep) validarCampo('cep', { cep: v });
+                  void buscarCep(v);
+                }}
+                onBlur={() => {
+                  validarCampo('cep');
+                  if (somenteDigitos(cep).length === 8) {
+                    void buscarCep(cep);
+                  }
+                }}
+                placeholder="57020-050"
+                hasError={Boolean(errosCampos.cep || erroCep)}
+                className={buscandoCep ? 'pr-10' : ''}
+              />
+              {buscandoCep && (
+                <Loader2
+                  aria-label="Consultando CEP"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#1E6BFF]"
+                />
+              )}
+            </div>
           </FormField>
 
           <FormField
@@ -942,13 +983,23 @@ export function PacienteCadastroForm({
         </div>
       </section>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-end gap-3 pt-2">
         {onCancel && (
-          <PillButton variant="ghost" hideIconCircle onClick={onCancel}>
+          <PillButton
+            variant="ghost"
+            hideIconCircle
+            onClick={onCancel}
+            className="w-full sm:w-auto"
+          >
             Cancelar
           </PillButton>
         )}
-        <PillButton type="submit" loading={isSubmitting} size="lg">
+        <PillButton
+          type="submit"
+          loading={isSubmitting}
+          size="lg"
+          className="w-full sm:w-auto"
+        >
           {mode === 'autocadastro' ? 'Concluir autocadastro' : 'Salvar cadastro assistido'}
         </PillButton>
       </div>

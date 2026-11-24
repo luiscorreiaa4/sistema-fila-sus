@@ -6,12 +6,14 @@ import {
   Building2,
   Eye,
   EyeOff,
+  Loader2,
   Plus,
   Stethoscope,
   UserCog,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useViaCep } from '../hooks/useViaCep';
 import {
   ApiError,
   extrairMensagemErro,
@@ -89,6 +91,21 @@ export function AdminPage() {
   const [uMunicipio, setUMunicipio] = useState('Maceió');
   const [uEstado, setUEstado] = useState('AL');
 
+  const {
+    buscandoCep: buscandoCepUnidade,
+    erroCep: erroCepUnidade,
+    buscarCep: buscarCepUnidade,
+    limparEstadoCep: limparEstadoCepUnidade,
+  } = useViaCep({
+    onSuccess: (dados) => {
+      if (dados.logradouro) setULogradouro(dados.logradouro);
+      if (dados.bairro) setUBairro(dados.bairro);
+      if (dados.municipio) setUMunicipio(dados.municipio);
+      const ufValida = UFS_BRASIL.find((uf) => uf === dados.estado);
+      if (ufValida) setUEstado(ufValida);
+    },
+  });
+
   // Form Profissional
   const [pCpf, setPCpf] = useState('');
   const [pNome, setPNome] = useState('');
@@ -151,6 +168,7 @@ export function AdminPage() {
     setUBairro('');
     setUMunicipio('Maceió');
     setUEstado('AL');
+    limparEstadoCepUnidade();
   };
 
   const handleCriarUnidade = async (e: FormEvent) => {
@@ -321,12 +339,12 @@ export function AdminPage() {
     unidades.find((u) => u.id === id)?.nome ?? id.slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] pb-16">
+    <div className="min-h-screen overflow-x-clip bg-[#F8FAFC] text-[#0F172A] pb-16">
       <Navbar variant="portal" />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         {/* Cabeçalho + KPIs */}
-        <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 sm:p-8 shadow-soft space-y-6">
+        <section className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-8 shadow-soft space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <StatusBadge tone="info">Gestão da rede · Administrador</StatusBadge>
@@ -439,6 +457,7 @@ export function AdminPage() {
                 resetFormUnidade();
                 setModalUnidade(true);
               }}
+              className="w-full sm:w-auto"
             >
               Nova unidade
             </PillButton>
@@ -451,6 +470,7 @@ export function AdminPage() {
                 resetFormProfissional();
                 setModalProfissional(true);
               }}
+              className="w-full sm:w-auto"
             >
               Novo profissional
             </PillButton>
@@ -463,6 +483,7 @@ export function AdminPage() {
                 resetFormServico();
                 setModalServico(true);
               }}
+              className="w-full sm:w-auto"
             >
               Novo serviço
             </PillButton>
@@ -470,7 +491,7 @@ export function AdminPage() {
         </div>
 
         {/* Lista */}
-        <section className="rounded-[28px] bg-white border border-[#E2E8F0] shadow-soft overflow-hidden">
+        <section className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] shadow-soft overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} />
           ) : aba === 'unidades' ? (
@@ -482,59 +503,392 @@ export function AdminPage() {
                 className="border-none"
               />
             ) : (
-              <div className="overflow-x-auto">
+              <>
+                <div className="md:hidden divide-y divide-[#E2E8F0]">
+                  {unidades.map((u) => (
+                    <div key={u.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm text-[#0F172A] break-words">
+                            {u.nome}
+                          </p>
+                          <p className="text-xs text-[#64748B] break-words">
+                            {u.email || u.telefone || 'Sem contato informado'}
+                          </p>
+                        </div>
+                        <StatusBadge
+                          tone={u.status === 'ATIVA' ? 'success' : 'danger'}
+                          dot
+                        >
+                          {u.status}
+                        </StatusBadge>
+                      </div>
+
+                      <div className="text-xs text-[#64748B] space-y-1">
+                        <p>
+                          CNES: {u.cnes || '—'} · CNPJ: {formatarCnpj(u.cnpj)}
+                        </p>
+                        <p>
+                          {u.endereco.bairro}, {u.endereco.municipio}/
+                          {u.endereco.estado}
+                        </p>
+                        {u.motivoInativacao && (
+                          <p className="text-[11px] text-red-600 break-words">
+                            {u.motivoInativacao}
+                          </p>
+                        )}
+                      </div>
+
+                      {u.status === 'ATIVA' && (
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAlvoInativacao({
+                                tipo: 'unidade',
+                                id: u.id,
+                                nome: u.nome,
+                              });
+                              setMotivoInativacao('');
+                            }}
+                            className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                          >
+                            <Ban className="h-3.5 w-3.5" />
+                            Inativar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] uppercase tracking-wider text-[#64748B]">
+                        <th className="py-3.5 px-6">Unidade</th>
+                        <th className="py-3.5 px-4">CNES / CNPJ</th>
+                        <th className="py-3.5 px-4">Localização</th>
+                        <th className="py-3.5 px-4">Status</th>
+                        <th className="py-3.5 px-6 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
+                      {unidades.map((u) => (
+                        <tr key={u.id} className="hover:bg-[#F4F7FC]/70">
+                          <td className="py-4 px-6">
+                            <p className="font-medium text-[#0F172A]">{u.nome}</p>
+                            <p className="text-xs text-[#64748B]">
+                              {u.email || u.telefone || 'Sem contato informado'}
+                            </p>
+                          </td>
+                          <td className="py-4 px-4 text-xs text-[#64748B]">
+                            <p>CNES: {u.cnes || '—'}</p>
+                            <p>CNPJ: {formatarCnpj(u.cnpj)}</p>
+                          </td>
+                          <td className="py-4 px-4 text-xs text-[#64748B]">
+                            {u.endereco.bairro}, {u.endereco.municipio}/
+                            {u.endereco.estado}
+                          </td>
+                          <td className="py-4 px-4">
+                            <StatusBadge
+                              tone={u.status === 'ATIVA' ? 'success' : 'danger'}
+                              dot
+                            >
+                              {u.status}
+                            </StatusBadge>
+                            {u.motivoInativacao && (
+                              <p className="mt-1 text-[11px] text-red-600 max-w-xs">
+                                {u.motivoInativacao}
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            {u.status === 'ATIVA' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAlvoInativacao({
+                                    tipo: 'unidade',
+                                    id: u.id,
+                                    nome: u.nome,
+                                  });
+                                  setMotivoInativacao('');
+                                }}
+                                className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
+                              >
+                                <Ban className="h-3.5 w-3.5" />
+                                Inativar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )
+          ) : aba === 'profissionais' ? (
+            profissionais.length === 0 ? (
+              <EmptyState
+                icon={<UserCog className="h-6 w-6" />}
+                title="Nenhum profissional cadastrado"
+                description="Cadastre atendentes, profissionais de saúde e administradores."
+                className="border-none"
+              />
+            ) : (
+              <>
+                <div className="md:hidden divide-y divide-[#E2E8F0]">
+                  {profissionais.map((p) => {
+                    const ehProprioUsuario = usuario?.id === p.id;
+                    return (
+                      <div key={p.id} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm text-[#0F172A] break-words">
+                              {p.nomeExibicao}
+                            </p>
+                            <p className="text-xs text-[#64748B] break-words">
+                              {p.cpfFormatado} · {p.email}
+                            </p>
+                          </div>
+                          <StatusBadge
+                            tone={p.status === 'ATIVO' ? 'success' : 'danger'}
+                            dot
+                          >
+                            {p.status}
+                          </StatusBadge>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                          <StatusBadge tone="info">
+                            {LABELS_NIVEL_ACESSO[p.nivelAcesso]}
+                          </StatusBadge>
+                          {p.conselhoProfissional && (
+                            <span className="text-[#64748B]">
+                              {p.conselhoProfissional} {p.numeroRegistro}/{p.ufRegistro}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-1">
+                          {p.unidadesVinculadas.map((uid) => (
+                            <span
+                              key={uid}
+                              className="rounded-full bg-[#EFF4FB] px-2.5 py-0.5 text-[11px] text-[#1E6BFF]"
+                            >
+                              {nomeUnidade(uid)}
+                            </span>
+                          ))}
+                        </div>
+
+                        {p.status === 'ATIVO' && !ehProprioUsuario && (
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAlvoInativacao({
+                                  tipo: 'profissional',
+                                  id: p.id,
+                                  nome: p.nomeExibicao,
+                                });
+                                setMotivoInativacao('');
+                              }}
+                              className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                            >
+                              <Ban className="h-3.5 w-3.5" />
+                              Inativar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] uppercase tracking-wider text-[#64748B]">
+                        <th className="py-3.5 px-6">Profissional</th>
+                        <th className="py-3.5 px-4">Perfil / Conselho</th>
+                        <th className="py-3.5 px-4">Unidades vinculadas</th>
+                        <th className="py-3.5 px-4">Status</th>
+                        <th className="py-3.5 px-6 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
+                      {profissionais.map((p) => {
+                        const ehProprioUsuario = usuario?.id === p.id;
+                        return (
+                          <tr key={p.id} className="hover:bg-[#F4F7FC]/70">
+                            <td className="py-4 px-6">
+                              <p className="font-medium text-[#0F172A]">
+                                {p.nomeExibicao}
+                              </p>
+                              <p className="text-xs text-[#64748B]">
+                                {p.cpfFormatado} · {p.email}
+                              </p>
+                            </td>
+                            <td className="py-4 px-4 text-xs">
+                              <StatusBadge tone="info">
+                                {LABELS_NIVEL_ACESSO[p.nivelAcesso]}
+                              </StatusBadge>
+                              {p.conselhoProfissional && (
+                                <p className="mt-1 text-[#64748B]">
+                                  {p.conselhoProfissional} {p.numeroRegistro}/
+                                  {p.ufRegistro}
+                                </p>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-xs text-[#64748B]">
+                              <div className="flex flex-wrap gap-1">
+                                {p.unidadesVinculadas.map((uid) => (
+                                  <span
+                                    key={uid}
+                                    className="rounded-full bg-[#EFF4FB] px-2.5 py-0.5 text-[11px] text-[#1E6BFF]"
+                                  >
+                                    {nomeUnidade(uid)}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <StatusBadge
+                                tone={p.status === 'ATIVO' ? 'success' : 'danger'}
+                                dot
+                              >
+                                {p.status}
+                              </StatusBadge>
+                            </td>
+                            <td className="py-4 px-6 text-right">
+                              {p.status === 'ATIVO' && !ehProprioUsuario && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAlvoInativacao({
+                                      tipo: 'profissional',
+                                      id: p.id,
+                                      nome: p.nomeExibicao,
+                                    });
+                                    setMotivoInativacao('');
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
+                                >
+                                  <Ban className="h-3.5 w-3.5" />
+                                  Inativar
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )
+          ) : servicos.length === 0 ? (
+            <EmptyState
+              icon={<Stethoscope className="h-6 w-6" />}
+              title="Nenhum serviço cadastrado"
+              description="Cadastre consultas, procedimentos e cirurgias ofertados."
+              className="border-none"
+            />
+          ) : (
+            <>
+              <div className="md:hidden divide-y divide-[#E2E8F0]">
+                {servicos.map((s) => (
+                  <div key={s.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm text-[#0F172A] break-words">
+                          {s.nome}
+                        </p>
+                        <p className="text-xs text-[#64748B]">{s.especialidade}</p>
+                      </div>
+                      <StatusBadge
+                        tone={s.status === 'ATIVO' ? 'success' : 'danger'}
+                        dot
+                      >
+                        {s.status}
+                      </StatusBadge>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#64748B]">
+                      <StatusBadge tone="info">
+                        {LABELS_CATEGORIA_SERVICO[s.categoria]}
+                      </StatusBadge>
+                      <span>{LABELS_MODO_ACESSO[s.modoAcesso]}</span>
+                    </div>
+
+                    {s.orientacoesPreparo && (
+                      <p className="text-xs text-[#64748B] line-clamp-2">
+                        {s.orientacoesPreparo}
+                      </p>
+                    )}
+
+                    {s.status === 'ATIVO' && (
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={() => void handleInativarServico(s)}
+                          className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                        >
+                          <Ban className="h-3.5 w-3.5" />
+                          Inativar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] uppercase tracking-wider text-[#64748B]">
-                      <th className="py-3.5 px-6">Unidade</th>
-                      <th className="py-3.5 px-4">CNES / CNPJ</th>
-                      <th className="py-3.5 px-4">Localização</th>
+                      <th className="py-3.5 px-6">Serviço</th>
+                      <th className="py-3.5 px-4">Categoria e especialidade</th>
+                      <th className="py-3.5 px-4">Modo de acesso</th>
                       <th className="py-3.5 px-4">Status</th>
                       <th className="py-3.5 px-6 text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
-                    {unidades.map((u) => (
-                      <tr key={u.id} className="hover:bg-[#F4F7FC]/70">
+                    {servicos.map((s) => (
+                      <tr key={s.id} className="hover:bg-[#F4F7FC]/70">
                         <td className="py-4 px-6">
-                          <p className="font-medium text-[#0F172A]">{u.nome}</p>
-                          <p className="text-xs text-[#64748B]">
-                            {u.email || u.telefone || 'Sem contato informado'}
-                          </p>
-                        </td>
-                        <td className="py-4 px-4 text-xs text-[#64748B]">
-                          <p>CNES: {u.cnes || '—'}</p>
-                          <p>CNPJ: {formatarCnpj(u.cnpj)}</p>
-                        </td>
-                        <td className="py-4 px-4 text-xs text-[#64748B]">
-                          {u.endereco.bairro}, {u.endereco.municipio}/
-                          {u.endereco.estado}
-                        </td>
-                        <td className="py-4 px-4">
-                          <StatusBadge
-                            tone={u.status === 'ATIVA' ? 'success' : 'danger'}
-                            dot
-                          >
-                            {u.status}
-                          </StatusBadge>
-                          {u.motivoInativacao && (
-                            <p className="mt-1 text-[11px] text-red-600 max-w-xs">
-                              {u.motivoInativacao}
+                          <p className="font-medium text-[#0F172A]">{s.nome}</p>
+                          {s.orientacoesPreparo && (
+                            <p className="text-xs text-[#64748B] line-clamp-1 max-w-md">
+                              {s.orientacoesPreparo}
                             </p>
                           )}
                         </td>
+                        <td className="py-4 px-4 text-xs">
+                          <StatusBadge tone="info">
+                            {LABELS_CATEGORIA_SERVICO[s.categoria]}
+                          </StatusBadge>
+                          <p className="mt-1 text-[#64748B]">{s.especialidade}</p>
+                        </td>
+                        <td className="py-4 px-4 text-xs text-[#64748B]">
+                          {LABELS_MODO_ACESSO[s.modoAcesso]}
+                        </td>
+                        <td className="py-4 px-4">
+                          <StatusBadge
+                            tone={s.status === 'ATIVO' ? 'success' : 'danger'}
+                            dot
+                          >
+                            {s.status}
+                          </StatusBadge>
+                        </td>
                         <td className="py-4 px-6 text-right">
-                          {u.status === 'ATIVA' && (
+                          {s.status === 'ATIVO' && (
                             <button
                               type="button"
-                              onClick={() => {
-                                setAlvoInativacao({
-                                  tipo: 'unidade',
-                                  id: u.id,
-                                  nome: u.nome,
-                                });
-                                setMotivoInativacao('');
-                              }}
+                              onClick={() => void handleInativarServico(s)}
                               className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
                             >
                               <Ban className="h-3.5 w-3.5" />
@@ -547,161 +901,7 @@ export function AdminPage() {
                   </tbody>
                 </table>
               </div>
-            )
-          ) : aba === 'profissionais' ? (
-            profissionais.length === 0 ? (
-              <EmptyState
-                icon={<UserCog className="h-6 w-6" />}
-                title="Nenhum profissional cadastrado"
-                description="Cadastre atendentes, profissionais de saúde e administradores."
-                className="border-none"
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] uppercase tracking-wider text-[#64748B]">
-                      <th className="py-3.5 px-6">Profissional</th>
-                      <th className="py-3.5 px-4">Perfil / Conselho</th>
-                      <th className="py-3.5 px-4">Unidades vinculadas</th>
-                      <th className="py-3.5 px-4">Status</th>
-                      <th className="py-3.5 px-6 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
-                    {profissionais.map((p) => {
-                      const ehProprioUsuario = usuario?.id === p.id;
-                      return (
-                        <tr key={p.id} className="hover:bg-[#F4F7FC]/70">
-                          <td className="py-4 px-6">
-                            <p className="font-medium text-[#0F172A]">
-                              {p.nomeExibicao}
-                            </p>
-                            <p className="text-xs text-[#64748B]">
-                              {p.cpfFormatado} · {p.email}
-                            </p>
-                          </td>
-                          <td className="py-4 px-4 text-xs">
-                            <StatusBadge tone="info">
-                              {LABELS_NIVEL_ACESSO[p.nivelAcesso]}
-                            </StatusBadge>
-                            {p.conselhoProfissional && (
-                              <p className="mt-1 text-[#64748B]">
-                                {p.conselhoProfissional} {p.numeroRegistro}/
-                                {p.ufRegistro}
-                              </p>
-                            )}
-                          </td>
-                          <td className="py-4 px-4 text-xs text-[#64748B]">
-                            <div className="flex flex-wrap gap-1">
-                              {p.unidadesVinculadas.map((uid) => (
-                                <span
-                                  key={uid}
-                                  className="rounded-full bg-[#EFF4FB] px-2.5 py-0.5 text-[11px] text-[#1E6BFF]"
-                                >
-                                  {nomeUnidade(uid)}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <StatusBadge
-                              tone={p.status === 'ATIVO' ? 'success' : 'danger'}
-                              dot
-                            >
-                              {p.status}
-                            </StatusBadge>
-                          </td>
-                          <td className="py-4 px-6 text-right">
-                            {p.status === 'ATIVO' && !ehProprioUsuario && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAlvoInativacao({
-                                    tipo: 'profissional',
-                                    id: p.id,
-                                    nome: p.nomeExibicao,
-                                  });
-                                  setMotivoInativacao('');
-                                }}
-                                className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
-                              >
-                                <Ban className="h-3.5 w-3.5" />
-                                Inativar
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )
-          ) : servicos.length === 0 ? (
-            <EmptyState
-              icon={<Stethoscope className="h-6 w-6" />}
-              title="Nenhum serviço cadastrado"
-              description="Cadastre consultas, procedimentos e cirurgias ofertados."
-              className="border-none"
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] uppercase tracking-wider text-[#64748B]">
-                    <th className="py-3.5 px-6">Serviço</th>
-                    <th className="py-3.5 px-4">Categoria e especialidade</th>
-                    <th className="py-3.5 px-4">Modo de acesso</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-6 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
-                  {servicos.map((s) => (
-                    <tr key={s.id} className="hover:bg-[#F4F7FC]/70">
-                      <td className="py-4 px-6">
-                        <p className="font-medium text-[#0F172A]">{s.nome}</p>
-                        {s.orientacoesPreparo && (
-                          <p className="text-xs text-[#64748B] line-clamp-1 max-w-md">
-                            {s.orientacoesPreparo}
-                          </p>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-xs">
-                        <StatusBadge tone="info">
-                          {LABELS_CATEGORIA_SERVICO[s.categoria]}
-                        </StatusBadge>
-                        <p className="mt-1 text-[#64748B]">{s.especialidade}</p>
-                      </td>
-                      <td className="py-4 px-4 text-xs text-[#64748B]">
-                        {LABELS_MODO_ACESSO[s.modoAcesso]}
-                      </td>
-                      <td className="py-4 px-4">
-                        <StatusBadge
-                          tone={s.status === 'ATIVO' ? 'success' : 'danger'}
-                          dot
-                        >
-                          {s.status}
-                        </StatusBadge>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        {s.status === 'ATIVO' && (
-                          <button
-                            type="button"
-                            onClick={() => void handleInativarServico(s)}
-                            className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
-                          >
-                            <Ban className="h-3.5 w-3.5" />
-                            Inativar
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            </>
           )}
         </section>
       </main>
@@ -769,13 +969,44 @@ export function AdminPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 gap-4 pt-2 border-t border-[#E2E8F0]">
-            <FormField label="CEP" htmlFor="u-cep" required className="sm:col-span-2">
-              <TextInput
-                id="u-cep"
-                value={uCep}
-                onChange={(e) => setUCep(maskCep(e.target.value))}
-                placeholder="57020-050"
-              />
+            <FormField
+              label="CEP"
+              htmlFor="u-cep"
+              required
+              hint={
+                buscandoCepUnidade
+                  ? 'Buscando endereço pelo CEP...'
+                  : 'Preenchimento automático ao digitar 8 dígitos.'
+              }
+              error={erroCepUnidade || undefined}
+              className="sm:col-span-2"
+            >
+              <div className="relative">
+                <TextInput
+                  id="u-cep"
+                  inputMode="numeric"
+                  value={uCep}
+                  onChange={(e) => {
+                    const v = maskCep(e.target.value);
+                    setUCep(v);
+                    void buscarCepUnidade(v);
+                  }}
+                  onBlur={() => {
+                    if (somenteDigitos(uCep).length === 8) {
+                      void buscarCepUnidade(uCep);
+                    }
+                  }}
+                  placeholder="57020-050"
+                  hasError={Boolean(erroCepUnidade)}
+                  className={buscandoCepUnidade ? 'pr-10' : ''}
+                />
+                {buscandoCepUnidade && (
+                  <Loader2
+                    aria-label="Consultando CEP"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#1E6BFF]"
+                  />
+                )}
+              </div>
             </FormField>
             <FormField
               label="Logradouro"
@@ -837,15 +1068,20 @@ export function AdminPage() {
             </FormField>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
             <PillButton
               variant="ghost"
               hideIconCircle
               onClick={() => setModalUnidade(false)}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </PillButton>
-            <PillButton type="submit" loading={salvando}>
+            <PillButton
+              type="submit"
+              loading={salvando}
+              className="w-full sm:w-auto"
+            >
               Cadastrar unidade
             </PillButton>
           </div>
@@ -1020,15 +1256,20 @@ export function AdminPage() {
             </div>
           </FormField>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
             <PillButton
               variant="ghost"
               hideIconCircle
               onClick={() => setModalProfissional(false)}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </PillButton>
-            <PillButton type="submit" loading={salvando}>
+            <PillButton
+              type="submit"
+              loading={salvando}
+              className="w-full sm:w-auto"
+            >
               Cadastrar profissional
             </PillButton>
           </div>
@@ -1096,15 +1337,20 @@ export function AdminPage() {
             />
           </FormField>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
             <PillButton
               variant="ghost"
               hideIconCircle
               onClick={() => setModalServico(false)}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </PillButton>
-            <PillButton type="submit" loading={salvando}>
+            <PillButton
+              type="submit"
+              loading={salvando}
+              className="w-full sm:w-auto"
+            >
               Cadastrar serviço
             </PillButton>
           </div>
@@ -1137,15 +1383,21 @@ export function AdminPage() {
             />
           </FormField>
 
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
             <PillButton
               variant="ghost"
               hideIconCircle
               onClick={() => setAlvoInativacao(null)}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </PillButton>
-            <PillButton type="submit" variant="danger" loading={inativando}>
+            <PillButton
+              type="submit"
+              variant="danger"
+              loading={inativando}
+              className="w-full sm:w-auto"
+            >
               Confirmar Inativação
             </PillButton>
           </div>

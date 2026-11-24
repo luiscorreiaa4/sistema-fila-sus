@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  ChevronDown,
   Eye,
   EyeOff,
   Lock,
@@ -20,52 +19,16 @@ import { Navbar } from '../components/layout/Navbar';
 import { FormField, TextInput } from '../components/ui/FormControls';
 import { PillButton } from '../components/ui/PillButton';
 
-interface DemoAccount {
-  label: string;
-  tipoUsuario: TipoUsuario;
-  cpf: string;
-  senha: string;
-  perfil: string;
-}
-
-const DEMO_ACCOUNTS: DemoAccount[] = [
-  {
-    label: 'Maria da Silva (Cidadã)',
-    tipoUsuario: 'PACIENTE',
-    cpf: '52998224725',
-    senha: 'CidadaoSus2026',
-    perfil: 'PACIENTE',
-  },
-  {
-    label: 'Fernanda Santos (Recepção)',
-    tipoUsuario: 'PROFISSIONAL',
-    cpf: '22255588846',
-    senha: 'AtendeSus2026',
-    perfil: 'ATENDENTE',
-  },
-  {
-    label: 'Dr. Roberto Mendes (Médico)',
-    tipoUsuario: 'PROFISSIONAL',
-    cpf: '12345678909',
-    senha: 'MedicoSus2026',
-    perfil: 'PROFISSIONAL_SAUDE',
-  },
-  {
-    label: 'Carlos Almeida (Admin)',
-    tipoUsuario: 'PROFISSIONAL',
-    cpf: '11144477735',
-    senha: 'AdminSus2026',
-    perfil: 'ADMINISTRADOR',
-  },
-];
-
 export function LoginPage() {
   const { login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const state = location.state as { cpfInicial?: string; from?: { pathname: string } } | null;
+  const state = location.state as {
+    cpfInicial?: string;
+    from?: { pathname: string };
+  } | null;
 
   const [tipoUsuario, setTipoUsuario] = useState<TipoUsuario>('PACIENTE');
   const [cpf, setCpf] = useState(
@@ -76,15 +39,6 @@ export function LoginPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [bloqueado, setBloqueado] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [mostrarDemos, setMostrarDemos] = useState(false);
-
-  const preencherDemo = (acc: DemoAccount) => {
-    setTipoUsuario(acc.tipoUsuario);
-    setCpf(maskCpf(acc.cpf));
-    setSenha(acc.senha);
-    setErro(null);
-    setBloqueado(false);
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -108,7 +62,10 @@ export function LoginPage() {
         senha,
         tipoUsuario,
       });
-      toast.success('Acesso liberado', `Bem-vindo(a), ${resultado.usuario.nomeExibicao}`);
+      toast.success(
+        'Acesso liberado',
+        `Bem-vindo(a), ${resultado.usuario.nomeExibicao}`
+      );
       const destino = getHomeRouteByPerfil(resultado.perfil);
       navigate(destino, { replace: true });
     } catch (err) {
@@ -122,14 +79,14 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
+    <div className="min-h-screen overflow-x-clip bg-[#F8FAFC] text-[#0F172A]">
       <Navbar variant="portal" />
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="rounded-[32px] bg-white border border-[#E2E8F0] p-6 sm:p-10 shadow-soft grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="rounded-[24px] sm:rounded-[32px] bg-white border border-[#E2E8F0] p-5 sm:p-10 shadow-soft grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-stretch">
           {/* Esquerda: Formulário Minimalista */}
-          <div className="lg:col-span-6 flex flex-col justify-center py-2 sm:px-4">
-            <h1 className="font-display text-3xl sm:text-4xl font-normal tracking-tight text-[#0F172A]">
+          <div className="min-w-0 flex flex-col justify-center py-2 sm:px-4">
+            <h1 className="font-display text-2xl sm:text-4xl font-normal tracking-tight text-[#0F172A] break-words">
               Entrar no Sistema Fila SUS
             </h1>
             <p className="mt-2 text-sm text-[#64748B]">
@@ -140,21 +97,21 @@ export function LoginPage() {
             <div
               role="tablist"
               aria-label="Tipo de usuário"
-              className="mt-6 grid grid-cols-2 gap-1.5 rounded-full bg-[#EFF4FB] p-1.5 border border-[#DBEAFE]"
+              className="mt-6 grid grid-cols-2 gap-1.5 rounded-2xl sm:rounded-full bg-[#EFF4FB] p-1.5 border border-[#DBEAFE]"
             >
               <button
                 type="button"
                 role="tab"
                 aria-selected={tipoUsuario === 'PACIENTE'}
                 onClick={() => setTipoUsuario('PACIENTE')}
-                className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold transition-all ${
+                className={`min-w-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-full px-2.5 sm:px-4 py-2.5 text-[11px] sm:text-xs font-semibold text-center leading-tight transition-all ${
                   tipoUsuario === 'PACIENTE'
                     ? 'bg-[#1E6BFF] text-white shadow-sm'
                     : 'text-[#64748B] hover:text-[#0F172A]'
                 }`}
               >
-                <Users className="h-3.5 w-3.5" />
-                Cidadão / Paciente
+                <Users className="h-3.5 w-3.5 shrink-0" />
+                <span>Cidadão / Paciente</span>
               </button>
 
               <button
@@ -162,14 +119,14 @@ export function LoginPage() {
                 role="tab"
                 aria-selected={tipoUsuario === 'PROFISSIONAL'}
                 onClick={() => setTipoUsuario('PROFISSIONAL')}
-                className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold transition-all ${
+                className={`min-w-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-full px-2.5 sm:px-4 py-2.5 text-[11px] sm:text-xs font-semibold text-center leading-tight transition-all ${
                   tipoUsuario === 'PROFISSIONAL'
                     ? 'bg-[#1E6BFF] text-white shadow-sm'
                     : 'text-[#64748B] hover:text-[#0F172A]'
                 }`}
               >
-                <Stethoscope className="h-3.5 w-3.5" />
-                Equipe / Profissional
+                <Stethoscope className="h-3.5 w-3.5 shrink-0" />
+                <span>Equipe / Profissional</span>
               </button>
             </div>
 
@@ -184,7 +141,9 @@ export function LoginPage() {
                   }`}
                 >
                   <p className="font-semibold">
-                    {bloqueado ? 'Conta temporariamente bloqueada' : 'Falha na autenticação'}
+                    {bloqueado
+                      ? 'Conta temporariamente bloqueada'
+                      : 'Falha na autenticação'}
                   </p>
                   <p className="mt-0.5">{erro}</p>
                 </div>
@@ -245,49 +204,13 @@ export function LoginPage() {
                 to="/cadastro"
                 className="font-semibold text-[#1E6BFF] hover:text-[#1554D9]"
               >
-                Fazer autocadastro de cidadão →
+                Realizar autocadastro de cidadão →
               </Link>
-            </div>
-
-            {/* Contas de teste */}
-            <div className="mt-7 pt-5 border-t border-[#E2E8F0]">
-              <button
-                type="button"
-                onClick={() => setMostrarDemos((v) => !v)}
-                className="w-full flex items-center justify-between text-xs font-medium text-[#64748B] hover:text-[#0F172A]"
-              >
-                <span>Contas de demonstração</span>
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${
-                    mostrarDemos ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-
-              {mostrarDemos && (
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {DEMO_ACCOUNTS.map((acc) => (
-                    <button
-                      key={acc.cpf + acc.perfil}
-                      type="button"
-                      onClick={() => preencherDemo(acc)}
-                      className="text-left rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 hover:border-[#1E6BFF]/40 hover:bg-[#EFF4FB]/60 transition-colors"
-                    >
-                      <p className="text-xs font-semibold text-[#0F172A] truncate">
-                        {acc.label}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-[#64748B]">
-                        {acc.perfil} · CPF {maskCpf(acc.cpf)}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
           {/* Direita: Painel Azul Cobalto */}
-          <div className="lg:col-span-6 flex">
+          <div className="min-w-0 flex">
             <BrandVisualPanel
               className="w-full"
               headline="Um único portal conectado às unidades de saúde."

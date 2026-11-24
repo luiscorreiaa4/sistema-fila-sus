@@ -160,26 +160,26 @@ export function PainelPublicoPage() {
   const emAtendimento = chamadas.filter((c) => c.estado === 'EM_ATENDIMENTO');
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col">
+    <div className="min-h-screen overflow-x-clip bg-[#F8FAFC] text-[#0F172A] flex flex-col">
       {/* Barra superior para TVs e totens */}
-      <header className="px-4 sm:px-6 lg:px-8 pt-4">
-        <div className="mx-auto max-w-7xl rounded-full bg-white border border-[#E2E8F0] px-4 py-2.5 shadow-pill flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <header className="px-3 sm:px-6 lg:px-8 pt-4">
+        <div className="mx-auto max-w-7xl rounded-[24px] sm:rounded-full bg-white border border-[#E2E8F0] px-4 py-3 sm:py-2.5 shadow-pill flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <Link
               to={destinoVoltar}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF] hover:bg-[#DBEAFE] transition-colors"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF] hover:bg-[#DBEAFE] transition-colors"
               title="Voltar ao portal"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-display text-sm font-semibold text-[#0F172A]">
+                <span className="font-display text-sm font-semibold text-[#0F172A] truncate">
                   Painel público de chamadas
                 </span>
               </div>
               {unidadeAtual && (
-                <p className="text-[11px] text-[#64748B]">
+                <p className="text-[11px] text-[#64748B] truncate">
                   {unidadeAtual.nome} ·{' '}
                   {unidadeAtual.cnes ? `CNES ${unidadeAtual.cnes}` : unidadeAtual.endereco.municipio}
                 </p>
@@ -187,16 +187,16 @@ export function PainelPublicoPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto min-w-0">
             {/* Seletor de unidade */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5">
-              <Building2 className="h-3.5 w-3.5 text-[#1E6BFF]" />
+            <div className="flex-1 sm:flex-initial min-w-0 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5">
+              <Building2 className="h-3.5 w-3.5 shrink-0 text-[#1E6BFF]" />
               <select
                 aria-label="Selecionar unidade de saúde"
                 disabled={loadingUnidades}
                 value={selectedUnidadeId}
                 onChange={(e) => handleTrocarUnidade(e.target.value)}
-                className="bg-transparent text-xs font-medium text-[#0F172A] focus:outline-none max-w-[210px]"
+                className="w-full min-w-0 bg-transparent text-xs font-medium text-[#0F172A] focus:outline-none sm:max-w-[210px]"
               >
                 {unidades.length === 0 ? (
                   <option value="">Sem unidades ativas</option>
@@ -282,7 +282,7 @@ export function PainelPublicoPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             {/* Destaque principal */}
             <section
-              className={`lg:col-span-7 rounded-[32px] bg-cobalt-gradient p-7 sm:p-10 text-white shadow-cobalt flex flex-col justify-between relative overflow-hidden min-h-[440px] ${
+              className={`min-w-0 lg:col-span-7 rounded-[24px] sm:rounded-[32px] bg-cobalt-gradient p-5 sm:p-10 text-white shadow-cobalt flex flex-col justify-between relative overflow-hidden min-h-[340px] sm:min-h-[440px] ${
                 animarDestaque ? 'animate-call-highlight' : ''
               }`}
             >
@@ -292,12 +292,12 @@ export function PainelPublicoPage() {
               />
 
               {chamadaAtual ? (
-                <div className="relative z-10 my-8">
-                  <p className="text-sm uppercase tracking-[0.2em] text-white/75 font-medium">
+                <div className="relative z-10 my-4 sm:my-8">
+                  <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-white/75 font-medium">
                     Senha de atendimento
                   </p>
-                  <div className="mt-3 flex flex-wrap items-baseline gap-4">
-                    <span className="font-display text-6xl sm:text-8xl font-semibold tracking-tight leading-none">
+                  <div className="mt-3 flex flex-wrap items-baseline gap-3 sm:gap-4">
+                    <span className="font-display text-5xl sm:text-7xl lg:text-8xl font-semibold tracking-tight leading-none break-words">
                       {chamadaAtual.senhaAtendimento}
                     </span>
                     {chamadaAtual.tentativa > 1 && (
@@ -354,7 +354,7 @@ export function PainelPublicoPage() {
             </section>
 
             {/* Coluna lateral */}
-            <aside className="lg:col-span-5 flex flex-col gap-5">
+            <aside className="min-w-0 lg:col-span-5 flex flex-col gap-5">
               {/* Últimas chamadas */}
               <div className="flex-1 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col">
                 <div className="flex items-center justify-between gap-2 pb-4 border-b border-[#E2E8F0]">
@@ -451,14 +451,14 @@ export function PainelPublicoPage() {
                   </p>
                 )}
 
-                <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between gap-3">
+                <div className="pt-3 border-t border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <p className="text-[11px] text-[#64748B]">
                     Quer ver sua posição exata na fila e quantas pessoas estão à
                     frente?
                   </p>
                   <Link
                     to="/paciente"
-                    className="shrink-0 rounded-full bg-[#EFF4FB] px-3.5 py-1.5 text-xs font-semibold text-[#1E6BFF] hover:bg-[#DBEAFE] transition-colors"
+                    className="w-fit shrink-0 rounded-full bg-[#EFF4FB] px-3.5 py-1.5 text-xs font-semibold text-[#1E6BFF] hover:bg-[#DBEAFE] transition-colors"
                   >
                     Portal do cidadão →
                   </Link>

@@ -22,7 +22,7 @@ export function BrandVisualPanel({
 }: BrandVisualPanelProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-[32px] bg-cobalt-gradient p-7 sm:p-9 text-white flex flex-col justify-between min-h-[460px] shadow-cobalt ${className}`}
+      className={`relative min-w-0 overflow-hidden rounded-[24px] sm:rounded-[32px] bg-cobalt-gradient p-5 sm:p-8 lg:p-9 text-white flex flex-col justify-between min-h-0 lg:min-h-[460px] shadow-cobalt ${className}`}
     >
       {/* Brilhos de fundo */}
       <div
@@ -38,7 +38,7 @@ export function BrandVisualPanel({
       <svg
         aria-hidden="true"
         viewBox="0 0 420 280"
-        className="pointer-events-none absolute right-0 bottom-8 w-[360px] max-w-none opacity-20"
+        className="pointer-events-none absolute right-0 bottom-8 w-[240px] sm:w-[360px] max-w-none opacity-20"
         fill="none"
       >
         <circle cx="260" cy="140" r="115" stroke="white" strokeWidth="1.5" />
@@ -53,17 +53,17 @@ export function BrandVisualPanel({
       </svg>
 
       {/* Cabeçalho superior */}
-      <div className="relative z-10 max-w-md">
-        <h2 className="font-display text-2xl sm:text-3xl font-normal tracking-tight leading-[1.12] text-white">
+      <div className="relative z-10 min-w-0 max-w-md">
+        <h2 className="font-display text-xl sm:text-3xl font-normal tracking-tight leading-[1.15] text-white break-words">
           {headline}
         </h2>
-        <p className="mt-3 text-sm text-white/80 leading-relaxed">
+        <p className="mt-2.5 sm:mt-3 text-sm text-white/80 leading-relaxed break-words">
           {description}
         </p>
       </div>
 
       {/* 3 badges */}
-      <div className="relative z-10 mt-8 grid grid-cols-1 gap-3">
+      <div className="relative z-10 mt-6 sm:mt-8 grid grid-cols-1 gap-2.5 sm:gap-3 min-w-0">
         <div>
           <GlassBadge
             icon={badges[0].icon}

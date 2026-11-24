@@ -84,7 +84,8 @@ export function PillButton(props: PillButtonProps) {
 
   const sizeCfg = SIZE_STYLES[size];
   const paddingFallback = hideIconCircle ? 'px-5' : sizeCfg.wrapper;
-  const baseClass = `inline-flex items-center justify-between rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E6BFF]/50 disabled:opacity-55 disabled:pointer-events-none ${CONTAINER_STYLES[variant]} ${paddingFallback} ${
+  const alignmentClass = hideIconCircle ? 'justify-center' : 'justify-between';
+  const baseClass = `inline-flex min-w-0 max-w-full items-center ${alignmentClass} whitespace-nowrap rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E6BFF]/50 disabled:opacity-55 disabled:pointer-events-none ${CONTAINER_STYLES[variant]} ${paddingFallback} ${
     hideIconCircle && size === 'sm' ? 'h-9 text-xs font-medium gap-2' : ''
   } ${hideIconCircle && size === 'md' ? 'h-11 text-sm font-medium gap-2' : ''} ${
     hideIconCircle && size === 'lg' ? 'h-12 text-sm font-medium gap-2' : ''

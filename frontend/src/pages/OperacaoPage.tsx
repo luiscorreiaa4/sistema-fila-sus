@@ -86,14 +86,14 @@ export function OperacaoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] pb-16">
+    <div className="min-h-screen overflow-x-clip bg-[#F8FAFC] text-[#0F172A] pb-16">
       <Navbar variant="portal" />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         {/* Cabeçalho Operacional */}
-        <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-5">
+        <section className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge tone="info" dot>
                   {LABELS_NIVEL_ACESSO[perfil]}
@@ -110,16 +110,16 @@ export function OperacaoPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto min-w-0">
               {/* Seletor de unidade vinculada */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2">
-                <Building2 className="h-4 w-4 text-[#1E6BFF]" />
+              <div className="w-full sm:w-auto min-w-0 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2">
+                <Building2 className="h-4 w-4 shrink-0 text-[#1E6BFF]" />
                 <select
                   aria-label="Unidade de atuação"
                   disabled={loadingUnidades || unidades.length === 0}
                   value={unidadeId}
                   onChange={(e) => setUnidadeId(e.target.value)}
-                  className="bg-transparent text-xs font-semibold text-[#0F172A] focus:outline-none max-w-[240px]"
+                  className="w-full min-w-0 bg-transparent text-xs font-semibold text-[#0F172A] focus:outline-none sm:max-w-[240px]"
                 >
                   {unidades.length === 0 ? (
                     <option value="">Sem unidades vinculadas</option>

@@ -25,7 +25,7 @@ export function FormField({
   className = '',
 }: FormFieldProps) {
   return (
-    <div className={`space-y-1.5 ${className}`}>
+    <div className={`min-w-0 space-y-1.5 ${className}`}>
       <label
         htmlFor={htmlFor}
         className="block text-xs font-medium text-[#0F172A] tracking-tight"
@@ -44,7 +44,7 @@ export function FormField({
 }
 
 const BASE_INPUT_CLASS =
-  'w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm text-[#0F172A] placeholder:text-[#64748B]/70 transition-colors focus:border-[#1E6BFF] focus:outline-none focus:ring-2 focus:ring-[#1E6BFF]/15 disabled:bg-[#F4F7FC] disabled:text-[#64748B]';
+  'w-full min-w-0 max-w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm text-[#0F172A] placeholder:text-[#64748B]/70 transition-colors focus:border-[#1E6BFF] focus:outline-none focus:ring-2 focus:ring-[#1E6BFF]/15 disabled:bg-[#F4F7FC] disabled:text-[#64748B]';
 
 const ERROR_INPUT_CLASS =
   'border-red-500 bg-red-50/40 focus:border-red-500 focus:ring-red-500/20';

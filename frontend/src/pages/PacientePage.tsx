@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  Loader2,
   MapPin,
   Radio,
   ShieldCheck,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useViaCep } from '../hooks/useViaCep';
 import {
   agendamentosApi,
   agendasApi,
@@ -151,6 +153,16 @@ export function PacientePage() {
   const [municipio, setMunicipio] = useState('');
   const [estado, setEstado] = useState('AL');
 
+  const { buscandoCep, erroCep, buscarCep, marcarCepComoResolvido } = useViaCep({
+    onSuccess: (dados) => {
+      if (dados.logradouro) setLogradouro(dados.logradouro);
+      if (dados.bairro) setBairro(dados.bairro);
+      if (dados.municipio) setMunicipio(dados.municipio);
+      const ufValida = UFS_BRASIL.find((uf) => uf === dados.estado);
+      if (ufValida) setEstado(ufValida);
+    },
+  });
+
   const trocarAba = (novaAba: AbaPaciente) => {
     setAba(novaAba);
     setSearchParams({ aba: novaAba }, { replace: true });
@@ -190,13 +202,14 @@ export function PacientePage() {
     setTiposDeficiencia(p.tiposDeficiencia ?? []);
     setPreferenciasAcessibilidade(p.preferenciasAcessibilidade ?? '');
     setCep(formatarCep(p.endereco.cep));
+    marcarCepComoResolvido(p.endereco.cep);
     setLogradouro(p.endereco.logradouro);
     setNumero(p.endereco.numero);
     setComplemento(p.endereco.complemento ?? '');
     setBairro(p.endereco.bairro);
     setMunicipio(p.endereco.municipio);
     setEstado(p.endereco.estado);
-  }, []);
+  }, [marcarCepComoResolvido]);
 
   const carregarPerfil = useCallback(async () => {
     setLoadingPerfil(true);
@@ -384,13 +397,13 @@ export function PacientePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] pb-24 md:pb-12">
+    <div className="min-h-screen overflow-x-clip bg-[#F8FAFC] text-[#0F172A] pb-24 md:pb-12">
       <Navbar variant="portal" />
 
       <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         {/* Cabeçalho do portal */}
-        <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+        <section className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge tone="info">Portal do cidadão</StatusBadge>
               {perfilPaciente?.ehPrioritarioLegal && (
@@ -534,7 +547,7 @@ export function PacientePage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                <div className="lg:col-span-7 rounded-[32px] bg-cobalt-gradient p-7 sm:p-9 text-white shadow-cobalt flex flex-col justify-between">
+                <div className="min-w-0 lg:col-span-7 rounded-[24px] sm:rounded-[32px] bg-cobalt-gradient p-5 sm:p-9 text-white shadow-cobalt flex flex-col justify-between">
                   <div>
                     <span className="glass-on-cobalt inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium">
                       <Activity className="h-3.5 w-3.5" />
@@ -550,23 +563,24 @@ export function PacientePage() {
                     </p>
                   </div>
 
-                  <div className="mt-8 flex flex-wrap gap-3">
+                  <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                     <PillButton
                       variant="white"
                       onClick={() => trocarAba('agendar')}
+                      className="w-full sm:w-auto"
                     >
                       Agendar novo atendimento
                     </PillButton>
                     <Link
                       to="/painel"
-                      className="inline-flex items-center rounded-full glass-on-cobalt px-5 py-2.5 text-xs font-medium text-white hover:bg-white/25 transition-colors"
+                      className="inline-flex items-center justify-center rounded-full glass-on-cobalt px-5 py-2.5 text-xs font-medium text-white hover:bg-white/25 transition-colors"
                     >
                       Abrir painel público
                     </Link>
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col justify-between">
+                <div className="min-w-0 lg:col-span-5 rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft flex flex-col justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
                       Próximo agendamento
@@ -880,7 +894,7 @@ export function PacientePage() {
 
         {/* Aba 4: meu perfil */}
         {aba === 'perfil' && (
-          <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 sm:p-8 shadow-soft space-y-6">
+          <section className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-8 shadow-soft space-y-6">
             {loadingPerfil || !perfilPaciente ? (
               <div className="space-y-4">
                 <Skeleton className="h-10 w-1/3" />
@@ -1034,12 +1048,43 @@ export function PacientePage() {
                   </FormField>
 
                   <div className="pt-4 border-t border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-6 gap-4">
-                    <FormField label="CEP" htmlFor="perf-cep" className="sm:col-span-2">
-                      <TextInput
-                        id="perf-cep"
-                        value={cep}
-                        onChange={(e) => setCep(maskCep(e.target.value))}
-                      />
+                    <FormField
+                      label="CEP"
+                      htmlFor="perf-cep"
+                      hint={
+                        buscandoCep
+                          ? 'Buscando endereço pelo CEP...'
+                          : 'Preenchimento automático do endereço ao informar os 8 dígitos.'
+                      }
+                      error={erroCep || undefined}
+                      className="sm:col-span-2"
+                    >
+                      <div className="relative">
+                        <TextInput
+                          id="perf-cep"
+                          inputMode="numeric"
+                          value={cep}
+                          onChange={(e) => {
+                            const v = maskCep(e.target.value);
+                            setCep(v);
+                            void buscarCep(v);
+                          }}
+                          onBlur={() => {
+                            if (somenteDigitos(cep).length === 8) {
+                              void buscarCep(cep);
+                            }
+                          }}
+                          placeholder="57020-050"
+                          hasError={Boolean(erroCep)}
+                          className={buscandoCep ? 'pr-10' : ''}
+                        />
+                        {buscandoCep && (
+                          <Loader2
+                            aria-label="Consultando CEP"
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#1E6BFF]"
+                          />
+                        )}
+                      </div>
                     </FormField>
                     <FormField
                       label="Logradouro"
@@ -1108,7 +1153,11 @@ export function PacientePage() {
                   </div>
 
                   <div className="flex justify-end pt-2">
-                    <PillButton type="submit" loading={salvandoPerfil}>
+                    <PillButton
+                      type="submit"
+                      loading={salvandoPerfil}
+                      className="w-full sm:w-auto"
+                    >
                       Salvar alterações
                     </PillButton>
                   </div>
@@ -1132,14 +1181,14 @@ export function PacientePage() {
               key={item.id}
               type="button"
               onClick={() => trocarAba(item.id)}
-              className={`flex flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[11px] font-medium transition-colors ${
+              className={`min-w-0 flex flex-col items-center justify-center gap-0.5 rounded-full py-2 px-1 text-[10px] font-medium transition-colors ${
                 ativo
                   ? 'bg-[#1E6BFF] text-white'
                   : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
             >
-              <Icon className="h-4 w-4" />
-              <span>{item.label}</span>
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="max-w-full truncate">{item.label}</span>
             </button>
           );
         })}
@@ -1281,15 +1330,21 @@ export function PacientePage() {
               />
             </FormField>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
               <PillButton
                 variant="ghost"
                 hideIconCircle
                 onClick={() => setAgendamentoParaCancelar(null)}
+                className="w-full sm:w-auto"
               >
                 Manter agendamento
               </PillButton>
-              <PillButton type="submit" variant="danger" loading={cancelando}>
+              <PillButton
+                type="submit"
+                variant="danger"
+                loading={cancelando}
+                className="w-full sm:w-auto"
+              >
                 Confirmar cancelamento
               </PillButton>
             </div>

@@ -166,7 +166,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Coluna esquerda: check-in presencial */}
-      <section className="lg:col-span-5 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-5">
+      <section className="min-w-0 lg:col-span-5 rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
@@ -291,9 +291,9 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
       </section>
 
       {/* Coluna direita: busca por CPF e cadastro assistido */}
-      <section className="lg:col-span-7 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+      <section className="min-w-0 lg:col-span-7 rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft space-y-5">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3">
+          <div className="min-w-0">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
               Localizar Cidadão
             </span>
@@ -308,6 +308,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
               variant="secondary"
               icon={<UserPlus className="h-3.5 w-3.5" />}
               onClick={() => setModalAssistido(true)}
+              className="w-full sm:w-auto"
             >
               Novo cadastro assistido
             </PillButton>
@@ -315,7 +316,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
         </div>
 
         <form onSubmit={handleBuscarCpf} className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <TextInput
               aria-label="CPF do paciente para busca"
               inputMode="numeric"
@@ -328,6 +329,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
             type="submit"
             loading={buscandoCpf}
             icon={<Search className="h-4 w-4" />}
+            className="w-full sm:w-auto"
           >
             Buscar CPF
           </PillButton>
@@ -381,7 +383,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
               </div>
             </div>
 
-            <p className="text-xs text-[#64748B]">
+            <p className="text-xs text-[#64748B] break-words">
               <strong>Contato:</strong> {pacienteEncontrado.email || '—'} ·{' '}
               {pacienteEncontrado.celular || '—'} | <strong>Endereço:</strong>{' '}
               {pacienteEncontrado.endereco.logradouro},{' '}
@@ -392,12 +394,13 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
             </p>
 
             {podeAlterarRecepcao && (
-              <div className="flex flex-wrap gap-3 pt-2 border-t border-[#E2E8F0]">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-2 border-t border-[#E2E8F0]">
                 <PillButton
                   size="sm"
                   variant="primary"
                   icon={<CalendarPlus className="h-3.5 w-3.5" />}
                   onClick={() => void abrirMarcacaoAssistida()}
+                  className="w-full sm:w-auto"
                 >
                   Marcação assistida
                 </PillButton>
@@ -409,6 +412,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
                   onClick={() =>
                     void executarCheckin({ cpf: pacienteEncontrado.cpf })
                   }
+                  className="w-full sm:w-auto"
                 >
                   Check-in imediato por CPF
                 </PillButton>

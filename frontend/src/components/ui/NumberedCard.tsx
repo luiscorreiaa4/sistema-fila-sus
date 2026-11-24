@@ -33,9 +33,9 @@ export function NumberedCard({
 
   return (
     <article
-      className={`group relative flex flex-col justify-between rounded-[20px] bg-white border border-[#E2E8F0] p-6 transition-all duration-200 hover:border-[#1E6BFF]/35 hover:shadow-soft ${className}`}
+      className={`group relative min-w-0 flex flex-col justify-between rounded-[20px] bg-white border border-[#E2E8F0] p-5 sm:p-6 transition-all duration-200 hover:border-[#1E6BFF]/35 hover:shadow-soft ${className}`}
     >
-      <div>
+      <div className="min-w-0">
         <div className="flex items-start justify-between gap-3">
           <span className="font-display text-4xl font-light tracking-tight text-[#DBEAFE] select-none leading-none">
             {numero}
@@ -43,11 +43,11 @@ export function NumberedCard({
           {badge}
         </div>
 
-        <div className="mt-5 flex items-center gap-3">
+        <div className="mt-5 flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#EFF4FB] text-[#1E6BFF]">
             {icon}
           </div>
-          <h3 className="font-display text-lg font-medium text-[#0F172A] leading-snug">
+          <h3 className="min-w-0 font-display text-lg font-medium text-[#0F172A] leading-snug break-words">
             {title}
           </h3>
         </div>
@@ -58,11 +58,11 @@ export function NumberedCard({
           </p>
         )}
 
-        {children && <div className="mt-4">{children}</div>}
+        {children && <div className="mt-4 min-w-0">{children}</div>}
       </div>
 
       {(actionLabel || rightMeta) && (
-        <div className="mt-6 pt-4 border-t border-[#E2E8F0]/70 flex items-center justify-between gap-3">
+        <div className="mt-6 pt-4 border-t border-[#E2E8F0]/70 flex flex-wrap items-center justify-between gap-2.5">
           {actionLabel ? (
             actionTo ? (
               <Link
@@ -87,7 +87,9 @@ export function NumberedCard({
           )}
 
           {rightMeta && (
-            <div className="text-xs text-[#64748B] text-right">{rightMeta}</div>
+            <div className="text-xs text-[#64748B] sm:text-right break-words">
+              {rightMeta}
+            </div>
           )}
         </div>
       )}

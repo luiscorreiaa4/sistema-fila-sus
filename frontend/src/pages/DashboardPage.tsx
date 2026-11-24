@@ -124,7 +124,7 @@ export function DashboardPage() {
         : '';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
+    <div className="min-h-screen overflow-x-clip bg-[#F8FAFC] text-[#0F172A]">
       <Navbar variant="portal" />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-20 space-y-12">
@@ -135,15 +135,15 @@ export function DashboardPage() {
         )}
 
         {/* Cabeçalho do Dashboard + KPIs */}
-        <section className="rounded-[32px] bg-white border border-[#E2E8F0] p-6 sm:p-10 shadow-soft space-y-8">
+        <section className="rounded-[24px] sm:rounded-[32px] bg-white border border-[#E2E8F0] p-5 sm:p-10 shadow-soft space-y-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#EFF4FB] border border-[#DBEAFE] px-3.5 py-1.5 text-xs font-medium text-[#1E6BFF]">
-                <Sparkles className="h-3.5 w-3.5" />
-                Dashboard da Rede SUS · {labelPerfil}
+            <div className="min-w-0">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#EFF4FB] border border-[#DBEAFE] px-3.5 py-1.5 text-xs font-medium text-[#1E6BFF]">
+                <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Dashboard da Rede SUS · {labelPerfil}</span>
               </div>
 
-              <h1 className="mt-4 font-display text-3xl sm:text-4xl font-normal tracking-tight text-[#0F172A]">
+              <h1 className="mt-4 font-display text-2xl sm:text-4xl font-normal tracking-tight text-[#0F172A] break-words">
                 Olá, <span className="text-[#1E6BFF]">{usuario?.nomeExibicao}</span>
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-[#64748B] leading-relaxed">
@@ -152,8 +152,13 @@ export function DashboardPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <PillButton to={homeRoute} size="lg" variant="primary">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 w-full lg:w-auto shrink-0">
+              <PillButton
+                to={homeRoute}
+                size="lg"
+                variant="primary"
+                className="w-full sm:w-auto"
+              >
                 Ir para Meu Portal
               </PillButton>
               <PillButton
@@ -161,8 +166,9 @@ export function DashboardPage() {
                 size="lg"
                 variant="secondary"
                 hideIconCircle
+                className="w-full sm:w-auto"
               >
-                <Monitor className="h-4 w-4" />
+                <Monitor className="h-4 w-4 shrink-0" />
                 Painel Público
               </PillButton>
             </div>
@@ -416,10 +422,10 @@ export function DashboardPage() {
                 {vagasFiltradas.slice(0, 9).map((vaga) => (
                   <div
                     key={vaga.id}
-                    className="rounded-[20px] border border-[#E2E8F0] bg-[#F8FAFC]/60 p-5 flex flex-col justify-between hover:bg-white hover:border-[#1E6BFF]/35 hover:shadow-soft transition-all"
+                    className="min-w-0 rounded-[20px] border border-[#E2E8F0] bg-[#F8FAFC]/60 p-5 flex flex-col justify-between hover:bg-white hover:border-[#1E6BFF]/35 hover:shadow-soft transition-all"
                   >
                     <div>
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <StatusBadge tone="info">
                           {formatarDataCurta(vaga.dataHoraInicio)} ·{' '}
                           {formatarHora(vaga.dataHoraInicio)}
@@ -443,7 +449,7 @@ export function DashboardPage() {
                       )}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-[#E2E8F0]/70 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-[#E2E8F0]/70 flex flex-wrap items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1 text-[11px] text-[#64748B]">
                         <Clock className="h-3 w-3" />
                         {vaga.especialidade}

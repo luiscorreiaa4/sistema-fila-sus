@@ -14,34 +14,39 @@ import { PillButton } from '../components/ui/PillButton';
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col">
+    <div className="min-h-screen overflow-x-clip bg-[#F8FAFC] text-[#0F172A] flex flex-col">
       <Navbar variant="landing" />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-16 space-y-14">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-16 space-y-12 sm:space-y-14">
         {/* Hero */}
-        <section className="rounded-[32px] bg-white border border-[#E2E8F0] p-6 sm:p-10 lg:p-12 shadow-soft">
+        <section className="rounded-[24px] sm:rounded-[32px] bg-white border border-[#E2E8F0] p-5 sm:p-10 lg:p-12 shadow-soft">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
             {/* Esquerda */}
-            <div className="lg:col-span-7 flex flex-col justify-between py-2">
+            <div className="min-w-0 lg:col-span-7 flex flex-col justify-between py-2">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#EFF4FB] border border-[#DBEAFE] px-3.5 py-1.5 text-xs font-medium text-[#1E6BFF]">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Transparência nas Filas do SUS · Maceió
+                <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#EFF4FB] border border-[#DBEAFE] px-3.5 py-1.5 text-xs font-medium text-[#1E6BFF]">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Transparência nas Filas do SUS · Maceió</span>
                 </div>
 
-                <h1 className="hero-title mt-6 text-4xl sm:text-5xl lg:text-[54px] text-[#0F172A]">
+                <h1 className="hero-title mt-6 text-[30px] sm:text-5xl lg:text-[54px] text-[#0F172A] break-words">
                   Atendimento público com{' '}
                   <span className="text-[#1E6BFF]">previsibilidade e respeito</span>.
                 </h1>
 
-                <p className="mt-5 max-w-xl text-base text-[#64748B] leading-relaxed">
+                <p className="mt-5 max-w-xl text-sm sm:text-base text-[#64748B] leading-relaxed">
                   Agende consultas e exames pelo celular, acompanhe sua posição
                   na fila presencial em tempo real e confira o painel de
                   chamadas sem expor seus dados pessoais.
                 </p>
 
-                <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                  <PillButton to="/cadastro" size="lg" variant="primary">
+                <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+                  <PillButton
+                    to="/cadastro"
+                    size="lg"
+                    variant="primary"
+                    className="w-full sm:w-auto"
+                  >
                     Criar conta gratuita
                   </PillButton>
                   <PillButton
@@ -49,14 +54,15 @@ export function LandingPage() {
                     size="lg"
                     variant="secondary"
                     hideIconCircle
+                    className="w-full sm:w-auto"
                   >
                     Entrar no Portal
                   </PillButton>
                   <Link
                     to="/painel"
-                    className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[#64748B] hover:text-[#1E6BFF] transition-colors"
+                    className="inline-flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 text-sm font-medium text-[#64748B] hover:text-[#1E6BFF] transition-colors"
                   >
-                    <Monitor className="h-4 w-4" />
+                    <Monitor className="h-4 w-4 shrink-0" />
                     Abrir Painel Público →
                   </Link>
                 </div>
@@ -92,7 +98,7 @@ export function LandingPage() {
             </div>
 
             {/* Direita (Painel Azul Cobalto) */}
-            <div className="lg:col-span-5 flex">
+            <div className="min-w-0 lg:col-span-5 flex">
               <BrandVisualPanel
                 className="w-full"
                 headline="Informações claras para o cidadão."
@@ -212,13 +218,18 @@ export function LandingPage() {
                 precisar de login, exibindo apenas a senha, o guichê e o horário.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <PillButton to="/painel" variant="white" size="lg">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 shrink-0">
+              <PillButton
+                to="/painel"
+                variant="white"
+                size="lg"
+                className="w-full sm:w-auto"
+              >
                 Ver Painel Público
               </PillButton>
               <Link
                 to="/cadastro"
-                className="inline-flex items-center rounded-full glass-on-cobalt px-5 py-3 text-xs font-semibold text-white hover:bg-white/25 transition-colors"
+                className="inline-flex items-center justify-center rounded-full glass-on-cobalt px-5 py-3 text-xs font-semibold text-white hover:bg-white/25 transition-colors"
               >
                 Criar conta
               </Link>

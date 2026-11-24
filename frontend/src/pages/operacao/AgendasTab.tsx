@@ -317,30 +317,30 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
   return (
     <div className="space-y-5">
       {/* Sub-navegação em pílula */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-full bg-white border border-[#E2E8F0] p-1 shadow-pill">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3">
+        <div className="grid grid-cols-1 sm:inline-flex w-full sm:w-auto gap-1 rounded-2xl sm:rounded-full bg-white border border-[#E2E8F0] p-1.5 sm:p-1 shadow-pill">
           <button
             type="button"
             onClick={() => setSubAba('agendas')}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+            className={`w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-xl sm:rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
               subAba === 'agendas'
                 ? 'bg-[#1E6BFF] text-white'
                 : 'text-[#64748B] hover:text-[#0F172A]'
             }`}
           >
-            <CalendarDays className="h-3.5 w-3.5" />
+            <CalendarDays className="h-3.5 w-3.5 shrink-0" />
             Agendas ({agendas.length})
           </button>
           <button
             type="button"
             onClick={() => setSubAba('agendamentos')}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+            className={`w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-xl sm:rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
               subAba === 'agendamentos'
                 ? 'bg-[#1E6BFF] text-white'
                 : 'text-[#64748B] hover:text-[#0F172A]'
             }`}
           >
-            <ClipboardList className="h-3.5 w-3.5" />
+            <ClipboardList className="h-3.5 w-3.5 shrink-0" />
             Agendamentos da unidade ({agendamentos.length})
           </button>
         </div>
@@ -350,6 +350,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             size="sm"
             icon={<CalendarPlus className="h-3.5 w-3.5" />}
             onClick={() => setModalAgenda(true)}
+            className="w-full sm:w-auto"
           >
             Nova agenda
           </PillButton>
@@ -463,13 +464,13 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
 
       {/* Sub-aba: agendamentos da unidade */}
       {subAba === 'agendamentos' && (
-        <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-5">
+        <section className="rounded-[24px] sm:rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-6 shadow-soft space-y-5">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void carregarAgendamentos();
             }}
-            className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end"
           >
             <FormField label="Data" htmlFor="filtro-ag-data">
               <TextInput
@@ -502,6 +503,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             <PillButton
               type="submit"
               icon={<Search className="h-3.5 w-3.5" />}
+              className="w-full sm:w-auto"
             >
               Filtrar
             </PillButton>
@@ -517,77 +519,135 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
               className="border-dashed bg-[#F8FAFC]"
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] text-[11px] uppercase tracking-wider text-[#64748B]">
-                    <th className="py-2.5 pr-4">Horário</th>
-                    <th className="py-2.5 pr-4">Paciente</th>
-                    <th className="py-2.5 pr-4">Serviço</th>
-                    <th className="py-2.5 pr-4">Protocolo / senha</th>
-                    <th className="py-2.5 pr-4">Situação</th>
-                    {podeCancelarOuCheckin && (
-                      <th className="py-2.5 text-right">Ações</th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
-                  {agendamentos.map((ag) => (
-                    <tr key={ag.id} className="hover:bg-[#F4F7FC]/70">
-                      <td className="py-3 pr-4 text-xs font-medium text-[#0F172A]">
-                        {formatarDataHora(ag.dataHoraAtendimento)}
-                      </td>
-                      <td className="py-3 pr-4">
-                        <p className="font-medium text-[#0F172A]">
+            <>
+              <div className="md:hidden space-y-3">
+                {agendamentos.map((ag) => (
+                  <div
+                    key={ag.id}
+                    className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-[#1E6BFF]">
+                          {formatarDataHora(ag.dataHoraAtendimento)}
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-[#0F172A] break-words">
                           {ag.pacienteNomeExibicao ?? 'Paciente'}
                         </p>
-                        <p className="text-[11px] text-[#64748B]">
-                          {LABELS_ORIGEM_MARCACAO[ag.origemMarcacao]}
-                        </p>
-                      </td>
-                      <td className="py-3 pr-4 text-xs text-[#64748B]">
-                        {ag.servicoNome}
-                      </td>
-                      <td className="py-3 pr-4 text-xs">
+                      </div>
+                      {badgeStatusAg(ag.status)}
+                    </div>
+
+                    <div className="text-xs text-[#64748B] space-y-1">
+                      <p>{ag.servicoNome}</p>
+                      <p>
+                        Protocolo:{' '}
                         <code className="font-semibold text-[#1E6BFF]">
                           {ag.protocolo}
-                        </code>
-                        <p className="text-[11px] text-[#64748B]">
-                          Senha {ag.senhaAtendimento}
-                        </p>
-                      </td>
-                      <td className="py-3 pr-4">{badgeStatusAg(ag.status)}</td>
+                        </code>{' '}
+                        · Senha {ag.senhaAtendimento}
+                      </p>
+                      <p>{LABELS_ORIGEM_MARCACAO[ag.origemMarcacao]}</p>
+                    </div>
+
+                    {podeCancelarOuCheckin && ag.status === 'AGENDADO' && (
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-[#E2E8F0]">
+                        <button
+                          type="button"
+                          onClick={() => void handleCheckinRapido(ag.protocolo)}
+                          className="inline-flex items-center gap-1 rounded-full bg-[#EFF4FB] px-3 py-1.5 text-xs font-semibold text-[#1E6BFF] hover:bg-[#DBEAFE]"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Check-in
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAgCancelar(ag);
+                            setMotivoCancel('');
+                          }}
+                          className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#E2E8F0] text-[11px] uppercase tracking-wider text-[#64748B]">
+                      <th className="py-2.5 pr-4">Horário</th>
+                      <th className="py-2.5 pr-4">Paciente</th>
+                      <th className="py-2.5 pr-4">Serviço</th>
+                      <th className="py-2.5 pr-4">Protocolo / senha</th>
+                      <th className="py-2.5 pr-4">Situação</th>
                       {podeCancelarOuCheckin && (
-                        <td className="py-3 text-right">
-                          {ag.status === 'AGENDADO' && (
-                            <div className="inline-flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => void handleCheckinRapido(ag.protocolo)}
-                                className="inline-flex items-center gap-1 rounded-full bg-[#EFF4FB] px-3 py-1 text-xs font-semibold text-[#1E6BFF] hover:bg-[#DBEAFE]"
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Check-in
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAgCancelar(ag);
-                                  setMotivoCancel('');
-                                }}
-                                className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          )}
-                        </td>
+                        <th className="py-2.5 text-right">Ações</th>
                       )}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0]/70 text-sm">
+                    {agendamentos.map((ag) => (
+                      <tr key={ag.id} className="hover:bg-[#F4F7FC]/70">
+                        <td className="py-3 pr-4 text-xs font-medium text-[#0F172A]">
+                          {formatarDataHora(ag.dataHoraAtendimento)}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <p className="font-medium text-[#0F172A]">
+                            {ag.pacienteNomeExibicao ?? 'Paciente'}
+                          </p>
+                          <p className="text-[11px] text-[#64748B]">
+                            {LABELS_ORIGEM_MARCACAO[ag.origemMarcacao]}
+                          </p>
+                        </td>
+                        <td className="py-3 pr-4 text-xs text-[#64748B]">
+                          {ag.servicoNome}
+                        </td>
+                        <td className="py-3 pr-4 text-xs">
+                          <code className="font-semibold text-[#1E6BFF]">
+                            {ag.protocolo}
+                          </code>
+                          <p className="text-[11px] text-[#64748B]">
+                            Senha {ag.senhaAtendimento}
+                          </p>
+                        </td>
+                        <td className="py-3 pr-4">{badgeStatusAg(ag.status)}</td>
+                        {podeCancelarOuCheckin && (
+                          <td className="py-3 text-right">
+                            {ag.status === 'AGENDADO' && (
+                              <div className="inline-flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => void handleCheckinRapido(ag.protocolo)}
+                                  className="inline-flex items-center gap-1 rounded-full bg-[#EFF4FB] px-3 py-1 text-xs font-semibold text-[#1E6BFF] hover:bg-[#DBEAFE]"
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Check-in
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAgCancelar(ag);
+                                    setMotivoCancel('');
+                                  }}
+                                  className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
       )}
@@ -732,7 +792,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
                 })}
             </div>
 
-            <div className="flex items-center gap-2 pt-1 max-w-xs">
+            <div className="flex items-center gap-2 pt-1 w-full sm:max-w-xs">
               <TextInput
                 value={horarioCustom}
                 onChange={(e) => setHorarioCustom(e.target.value)}
@@ -777,15 +837,20 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
             <PillButton
               variant="ghost"
               hideIconCircle
               onClick={() => setModalAgenda(false)}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </PillButton>
-            <PillButton type="submit" loading={criandoAgenda}>
+            <PillButton
+              type="submit"
+              loading={criandoAgenda}
+              className="w-full sm:w-auto"
+            >
               Criar agenda
             </PillButton>
           </div>
@@ -816,15 +881,21 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
               placeholder="Descreva o motivo (mínimo 5 caracteres)..."
             />
           </FormField>
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
             <PillButton
               variant="ghost"
               hideIconCircle
               onClick={() => setAgCancelar(null)}
+              className="w-full sm:w-auto"
             >
               Voltar
             </PillButton>
-            <PillButton type="submit" variant="danger" loading={cancelando}>
+            <PillButton
+              type="submit"
+              variant="danger"
+              loading={cancelando}
+              className="w-full sm:w-auto"
+            >
               Confirmar cancelamento
             </PillButton>
           </div>
