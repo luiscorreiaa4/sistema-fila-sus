@@ -35,9 +35,12 @@ Especifica o cadastro de Serviços (`RF008`), criação/publicação de Agendas 
   - **Regras:**
     - `unidade` deve estar `ATIVA` e `servico` deve estar `ATIVO`.
     - `capacidadePorHorario > 0` e `dataFim >= dataInicio`.
-    - Se `profissionalId` for informado, validar que ele está vinculado à `unidadeId` e **não possui agenda publicada/concorrente** nos mesmos horários do intervalo `[dataInicio, dataFim]`.
+    - Se `profissionalId` for informado, validar que ele está vinculado à `unidadeId` e **não possui agenda publicada/concorrente** nos mesmos horários do intervalo `[dataInicio, dataFim]`. Quando chamado por `PROFISSIONAL_SAUDE`, o sistema vincula automaticamente ao próprio solicitante e bloqueia tentativa de criar agenda em nome de outro profissional (`403 Forbidden`).
     - Quando `publicar = true` (ou ao chamar `POST /api/agendas/:id/publicar`), a entidade `Agenda.publicar()` gera todos os objetos `VagaAgenda` para as datas do intervalo correspondentes aos `diasHorarios`, iniciando `capacidadeTotal = capacidadePorHorario` e `vagasOcupadas = 0`, persistindo tudo em transação única.
-- `GET /api/agendas/disponiveis` — Consulta vagas com `vagasOcupadas < capacidadeTotal`, `dataHoraInicio >= agora` e agenda `PUBLICADA`, filtrando por `unidadeId`, `servicoId` e intervalo de datas.
+- `GET /api/agendas` — Lista agendas detalhadas (com nomes de unidade, serviço, profissional/registro e totais agregados `totalHorarios`, `totalVagas`, `vagasOcupadas` e `vagasDisponiveis`).
+- `GET /api/agendas/catalogo-busca` — Rota pública retornando `especialidades` ativas e `profissionais` de saúde ativos (apenas `id`, `nomeExibicao`, `registroConselho`, `especialidades` e `unidadesVinculadas`, sem expor CPF, e-mail ou celular — LGPD).
+- `GET /api/agendas/disponiveis` — Consulta vagas com `vagasOcupadas < capacidadeTotal`, `dataHoraInicio >= agora` e agenda `PUBLICADA`, filtrando por `unidadeId`, `servicoId`, `especialidade`, `categoria`, `profissionalId`, `buscaProfissional`, `termo`, `turno` (`MANHA` | `TARDE` | `NOITE` em `America/Maceio`), `data` (`YYYY-MM-DD`) e intervalo `[dataInicio, dataFim]`.
+- `GET /api/agendas/grade` — `ADMINISTRADOR`, `PROFISSIONAL_SAUDE` ou `ATENDENTE` vinculado à unidade. Consulta a grade completa (`vagas_agenda` + `agendamentos` não cancelados + situação atual em `entradas_fila`) entre `dataInicio` e `dataFim`, retornando `slots` (horários livres, parciais e lotados) e `resumoDias` para o calendário clínico.
 - `PATCH /api/agendas/:id/situacao` — Permite alterar entre `PUBLICADA`, `BLOQUEADA` e `ENCERRADA`.
 
 ### 2.3. Marcação Transacional (`RF004`)

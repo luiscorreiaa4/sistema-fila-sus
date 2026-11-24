@@ -7,6 +7,7 @@ import {
   LogOut,
   Menu,
   Monitor,
+  Stethoscope,
   User,
   X,
 } from 'lucide-react';
@@ -45,9 +46,17 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
         ? [
             { label: 'Dashboard', href: '/dashboard', isRoute: true },
             { label: 'Painel Público', href: '/painel', isRoute: true },
-            { label: 'Meu Portal', href: homeRoute, isRoute: true },
+            {
+              label:
+                perfil === 'PROFISSIONAL_SAUDE' ? 'Minha Agenda' : 'Meu Portal',
+              href: homeRoute,
+              isRoute: true,
+            },
             ...(perfil === 'ADMINISTRADOR'
-              ? [{ label: 'Operação', href: '/operacao', isRoute: true }]
+              ? [
+                  { label: 'Portal Médico', href: '/medico', isRoute: true },
+                  { label: 'Operação', href: '/operacao', isRoute: true },
+                ]
               : []),
           ]
         : [
@@ -167,14 +176,24 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
                       Acessar meu portal
                     </Link>
                     {perfil === 'ADMINISTRADOR' && (
-                      <Link
-                        to="/operacao"
-                        onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#0F172A] hover:bg-[#EFF4FB] hover:text-[#1E6BFF] transition-colors"
-                      >
-                        <Activity className="h-3.5 w-3.5" />
-                        Área operacional
-                      </Link>
+                      <>
+                        <Link
+                          to="/medico"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#0F172A] hover:bg-[#EFF4FB] hover:text-[#1E6BFF] transition-colors"
+                        >
+                          <Stethoscope className="h-3.5 w-3.5" />
+                          Portal Médico
+                        </Link>
+                        <Link
+                          to="/operacao"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#0F172A] hover:bg-[#EFF4FB] hover:text-[#1E6BFF] transition-colors"
+                        >
+                          <Activity className="h-3.5 w-3.5" />
+                          Área operacional
+                        </Link>
+                      </>
                     )}
                     <button
                       type="button"

@@ -48,8 +48,9 @@ export function getHomeRouteByPerfil(perfil: PerfilAcesso): string {
     case 'PACIENTE':
       return '/paciente';
     case 'ATENDENTE':
-    case 'PROFISSIONAL_SAUDE':
       return '/operacao';
+    case 'PROFISSIONAL_SAUDE':
+      return '/medico';
     case 'ADMINISTRADOR':
       return '/admin';
   }

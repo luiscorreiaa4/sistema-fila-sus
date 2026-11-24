@@ -2,9 +2,11 @@ import { PrismaClient } from '@prisma/client';
 import { Router } from 'express';
 import {
   AlterarSituacaoAgendaUseCase,
+  ConsultarGradeAgendaUseCase,
   CriarAgendaUseCase,
-  ListarAgendasUseCase,
+  ListarAgendasDetalhadasUseCase,
   ListarVagasDisponiveisUseCase,
+  ObterCatalogoBuscaVagasUseCase,
 } from '../../../application/use-cases/agendas/AgendaUseCases';
 import {
   CancelarAgendamentoUseCase,
@@ -134,7 +136,9 @@ export function criarApiRouter(prisma: PrismaClient): Router {
     ),
     new AlterarSituacaoAgendaUseCase(agendaRepo, unidadeRepo, servicoRepo),
     new ListarVagasDisponiveisUseCase(agendaRepo),
-    new ListarAgendasUseCase(agendaRepo)
+    new ListarAgendasDetalhadasUseCase(agendaRepo),
+    new ObterCatalogoBuscaVagasUseCase(servicoRepo, profissionalRepo),
+    new ConsultarGradeAgendaUseCase(agendaRepo)
   );
 
   const agendamentosController = new AgendamentosController(
@@ -261,6 +265,16 @@ export function criarApiRouter(prisma: PrismaClient): Router {
     autenticarJwt,
     exigirPerfis('ADMINISTRADOR', 'PROFISSIONAL_SAUDE', 'ATENDENTE'),
     asyncHandler(agendasController.listar)
+  );
+  router.get(
+    '/agendas/catalogo-busca',
+    asyncHandler(agendasController.catalogoBusca)
+  );
+  router.get(
+    '/agendas/grade',
+    autenticarJwt,
+    exigirPerfis('ADMINISTRADOR', 'PROFISSIONAL_SAUDE', 'ATENDENTE'),
+    asyncHandler(agendasController.grade)
   );
   router.get(
     '/agendas/disponiveis',

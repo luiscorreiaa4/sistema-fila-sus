@@ -3,10 +3,37 @@ import { ValidationError } from '../../domain/errors/ValidationError';
 const DESLOCAMENTO_MACEIO_MS = -3 * 60 * 60 * 1000;
 const REGEX_DATA_ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+export type TurnoAtendimento = 'MANHA' | 'TARDE' | 'NOITE';
+
 export interface IntervaloDia {
   dataInicioDia: Date;
   dataFimDia: Date;
   dataIso: string;
+}
+
+/**
+ * Retorna a hora (0..23) no fuso America/Maceio (-03:00).
+ */
+export function obterHoraMaceio(data: Date): number {
+  const deslocado = new Date(data.getTime() + DESLOCAMENTO_MACEIO_MS);
+  return deslocado.getUTCHours();
+}
+
+/**
+ * Classifica o horário no turno de atendimento em America/Maceio (-03:00).
+ */
+export function obterTurnoMaceio(data: Date): TurnoAtendimento {
+  const hora = obterHoraMaceio(data);
+  if (hora < 12) return 'MANHA';
+  if (hora < 18) return 'TARDE';
+  return 'NOITE';
+}
+
+/**
+ * Retorna a data ISO (`YYYY-MM-DD`) no fuso America/Maceio (-03:00).
+ */
+export function extrairDataIsoMaceio(data: Date): string {
+  return obterIntervaloDiaMaceio(data).dataIso;
 }
 
 /**

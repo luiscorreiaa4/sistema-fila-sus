@@ -58,6 +58,8 @@ export function DashboardPage() {
     CategoriaServico | 'TODAS'
   >('TODAS');
   const [unidadeFiltro, setUnidadeFiltro] = useState<string>('TODAS');
+  const [especialidadeFiltro, setEspecialidadeFiltro] = useState<string>('TODAS');
+  const [profissionalFiltro, setProfissionalFiltro] = useState<string>('TODOS');
   const [servicoFiltro, setServicoFiltro] = useState<string>('TODOS');
 
   useEffect(() => {
@@ -96,9 +98,41 @@ export function DashboardPage() {
     return servicos.filter((s) => s.categoria === categoriaFiltro);
   }, [servicos, categoriaFiltro]);
 
+  const especialidadesDisponiveis = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of servicos) {
+      set.add(s.especialidade);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [servicos]);
+
+  const profissionaisDisponiveis = useMemo(() => {
+    const mapa = new Map<string, string>();
+    for (const v of vagas) {
+      if (v.profissionalId && v.profissionalNome) {
+        mapa.set(v.profissionalId, v.profissionalNome);
+      }
+    }
+    return Array.from(mapa.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }, [vagas]);
+
   const vagasFiltradas = useMemo(() => {
     return vagas.filter((v) => {
       if (unidadeFiltro !== 'TODAS' && v.unidadeId !== unidadeFiltro) {
+        return false;
+      }
+      if (
+        especialidadeFiltro !== 'TODAS' &&
+        v.especialidade !== especialidadeFiltro
+      ) {
+        return false;
+      }
+      if (
+        profissionalFiltro !== 'TODOS' &&
+        v.profissionalId !== profissionalFiltro
+      ) {
         return false;
       }
       if (servicoFiltro !== 'TODOS' && v.servicoId !== servicoFiltro) {
@@ -106,7 +140,7 @@ export function DashboardPage() {
       }
       return true;
     });
-  }, [vagas, unidadeFiltro, servicoFiltro]);
+  }, [vagas, unidadeFiltro, especialidadeFiltro, profissionalFiltro, servicoFiltro]);
 
   const totalVagasAbertas = useMemo(
     () => vagas.reduce((acc, item) => acc + item.vagasDisponiveis, 0),
@@ -373,7 +407,35 @@ export function DashboardPage() {
                 </h2>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
+                <select
+                  aria-label="Filtrar vagas por especialidade"
+                  value={especialidadeFiltro}
+                  onChange={(e) => setEspecialidadeFiltro(e.target.value)}
+                  className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-xs font-medium text-[#0F172A] focus:border-[#1E6BFF] focus:outline-none"
+                >
+                  <option value="TODAS">Todas especialidades</option>
+                  {especialidadesDisponiveis.map((esp) => (
+                    <option key={esp} value={esp}>
+                      {esp}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  aria-label="Filtrar vagas por médico"
+                  value={profissionalFiltro}
+                  onChange={(e) => setProfissionalFiltro(e.target.value)}
+                  className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-xs font-medium text-[#0F172A] focus:border-[#1E6BFF] focus:outline-none"
+                >
+                  <option value="TODOS">Todos os médicos</option>
+                  {profissionaisDisponiveis.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nome}
+                    </option>
+                  ))}
+                </select>
+
                 <select
                   aria-label="Filtrar vagas por unidade"
                   value={unidadeFiltro}
@@ -457,7 +519,7 @@ export function DashboardPage() {
                       <Link
                         to={
                           perfil === 'PACIENTE'
-                            ? `/paciente?aba=agendar&unidadeId=${vaga.unidadeId}&servicoId=${vaga.servicoId}`
+                            ? `/paciente?aba=agendar&unidadeId=${vaga.unidadeId}&servicoId=${vaga.servicoId}&especialidade=${encodeURIComponent(vaga.especialidade)}${vaga.profissionalId ? `&profissionalId=${vaga.profissionalId}` : ''}`
                             : homeRoute
                         }
                         className="text-xs font-semibold text-[#1E6BFF] hover:text-[#1554D9]"

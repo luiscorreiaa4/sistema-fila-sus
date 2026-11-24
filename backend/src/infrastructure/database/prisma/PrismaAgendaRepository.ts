@@ -1,16 +1,53 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { obterTurnoMaceio } from '../../../application/utils/dataMaceio';
 import {
   Agenda,
   ConfiguracaoDiaHorario,
 } from '../../../domain/entities/Agenda';
 import { VagaAgenda } from '../../../domain/entities/VagaAgenda';
 import {
+  AgendaDetalhadaDTO,
   FiltroAgendas,
+  FiltroGradeAgenda,
   FiltroVagasDisponiveis,
   IAgendaRepository,
+  SlotGradeAgendaDTO,
   VagaDisponivelDTO,
 } from '../../../domain/repositories/IAgendaRepository';
-import { paraDominioAgenda, paraDominioVagaAgenda } from './mappers';
+import {
+  paraDominioAgenda,
+  paraDominioPaciente,
+  paraDominioVagaAgenda,
+} from './mappers';
+
+function formatarDadosProfissional(
+  profissional: {
+    nomeCompleto: string;
+    nomeSocial: string | null;
+    conselhoProfissional: string | null;
+    numeroRegistro: string | null;
+    ufRegistro: string | null;
+  } | null
+): { nome: string | null; registro: string | null } {
+  if (!profissional) {
+    return { nome: null, registro: null };
+  }
+
+  const nome =
+    profissional.nomeSocial?.trim() || profissional.nomeCompleto;
+  const conselho = profissional.conselhoProfissional?.trim() || null;
+  const numero = profissional.numeroRegistro?.trim() || null;
+  const uf = profissional.ufRegistro?.trim().toUpperCase() || null;
+
+  let registro: string | null = null;
+  if (conselho && numero && uf) {
+    registro = `${conselho} ${numero}/${uf}`;
+  } else if (conselho && numero) {
+    registro = `${conselho} ${numero}`;
+  }
+
+  return { nome, registro };
+}
 
 export class PrismaAgendaRepository implements IAgendaRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -111,6 +148,10 @@ export class PrismaAgendaRepository implements IAgendaRepository {
       dataMin = filtros.aPartirDe ?? filtros.dataInicio;
     }
 
+    const termo = filtros.termo?.trim();
+    const buscaProf = filtros.buscaProfissional?.trim();
+    const especialidade = filtros.especialidade?.trim();
+
     const rows = await this.prisma.vagaAgenda.findMany({
       where: {
         ...(dataMin || filtros.dataFim
@@ -124,9 +165,74 @@ export class PrismaAgendaRepository implements IAgendaRepository {
         agenda: {
           situacao: 'PUBLICADA',
           unidade: { status: 'ATIVA' },
-          servico: { status: 'ATIVO' },
+          servico: {
+            status: 'ATIVO',
+            ...(filtros.categoria ? { categoria: filtros.categoria } : {}),
+            ...(especialidade
+              ? {
+                  especialidade: {
+                    contains: especialidade,
+                    mode: 'insensitive',
+                  },
+                }
+              : {}),
+          },
           ...(filtros.unidadeId ? { unidadeId: filtros.unidadeId } : {}),
           ...(filtros.servicoId ? { servicoId: filtros.servicoId } : {}),
+          ...(filtros.profissionalId
+            ? { profissionalId: filtros.profissionalId }
+            : {}),
+          ...(buscaProf
+            ? {
+                profissional: {
+                  OR: [
+                    {
+                      nomeCompleto: {
+                        contains: buscaProf,
+                        mode: 'insensitive',
+                      },
+                    },
+                    {
+                      nomeSocial: {
+                        contains: buscaProf,
+                        mode: 'insensitive',
+                      },
+                    },
+                  ],
+                },
+              }
+            : {}),
+          ...(termo
+            ? {
+                OR: [
+                  {
+                    servico: {
+                      nome: { contains: termo, mode: 'insensitive' },
+                    },
+                  },
+                  {
+                    servico: {
+                      especialidade: { contains: termo, mode: 'insensitive' },
+                    },
+                  },
+                  {
+                    unidade: {
+                      nome: { contains: termo, mode: 'insensitive' },
+                    },
+                  },
+                  {
+                    profissional: {
+                      nomeCompleto: { contains: termo, mode: 'insensitive' },
+                    },
+                  },
+                  {
+                    profissional: {
+                      nomeSocial: { contains: termo, mode: 'insensitive' },
+                    },
+                  },
+                ],
+              }
+            : {}),
         },
       },
       include: {
@@ -142,21 +248,34 @@ export class PrismaAgendaRepository implements IAgendaRepository {
     });
 
     return rows
-      .filter((row) => row.vagasOcupadas < row.capacidadeTotal)
-      .map((row) => ({
-        vaga: paraDominioVagaAgenda(row),
-        agendaId: row.agendaId,
-        unidadeId: row.agenda.unidadeId,
-        unidadeNome: row.agenda.unidade.nome,
-        servicoId: row.agenda.servicoId,
-        servicoNome: row.agenda.servico.nome,
-        especialidade: row.agenda.servico.especialidade,
-        profissionalId: row.agenda.profissionalId,
-        profissionalNome: row.agenda.profissional
-          ? row.agenda.profissional.nomeSocial?.trim() ||
-            row.agenda.profissional.nomeCompleto
-          : null,
-      }));
+      .filter((row) => {
+        if (row.vagasOcupadas >= row.capacidadeTotal) {
+          return false;
+        }
+        if (filtros.turno && obterTurnoMaceio(row.dataHoraInicio) !== filtros.turno) {
+          return false;
+        }
+        return true;
+      })
+      .map((row) => {
+        const prof = formatarDadosProfissional(row.agenda.profissional);
+        return {
+          vaga: paraDominioVagaAgenda(row),
+          agendaId: row.agendaId,
+          unidadeId: row.agenda.unidadeId,
+          unidadeNome: row.agenda.unidade.nome,
+          unidadeBairro: row.agenda.unidade.bairro,
+          unidadeMunicipio: row.agenda.unidade.municipio,
+          servicoId: row.agenda.servicoId,
+          servicoNome: row.agenda.servico.nome,
+          especialidade: row.agenda.servico.especialidade,
+          categoria: row.agenda.servico.categoria,
+          orientacoesPreparo: row.agenda.servico.orientacoesPreparo,
+          profissionalId: row.agenda.profissionalId,
+          profissionalNome: prof.nome,
+          profissionalRegistro: prof.registro,
+        };
+      });
   }
 
   public async listarAgendas(filtros: FiltroAgendas = {}): Promise<Agenda[]> {
@@ -172,6 +291,158 @@ export class PrismaAgendaRepository implements IAgendaRepository {
       orderBy: { dataInicio: 'asc' },
     });
     return rows.map(paraDominioAgenda);
+  }
+
+  public async listarAgendasDetalhadas(
+    filtros: FiltroAgendas = {}
+  ): Promise<AgendaDetalhadaDTO[]> {
+    const rows = await this.prisma.agenda.findMany({
+      where: {
+        ...(filtros.unidadeId ? { unidadeId: filtros.unidadeId } : {}),
+        ...(filtros.servicoId ? { servicoId: filtros.servicoId } : {}),
+        ...(filtros.profissionalId
+          ? { profissionalId: filtros.profissionalId }
+          : {}),
+        ...(filtros.situacao ? { situacao: filtros.situacao } : {}),
+      },
+      include: {
+        unidade: true,
+        servico: true,
+        profissional: true,
+        vagas: {
+          select: {
+            capacidadeTotal: true,
+            vagasOcupadas: true,
+          },
+        },
+      },
+      orderBy: { dataInicio: 'asc' },
+    });
+
+    return rows.map((row) => {
+      const prof = formatarDadosProfissional(row.profissional);
+      const totalHorarios = row.vagas.length;
+      const totalVagas = row.vagas.reduce(
+        (acc, v) => acc + v.capacidadeTotal,
+        0
+      );
+      const vagasOcupadas = row.vagas.reduce(
+        (acc, v) => acc + v.vagasOcupadas,
+        0
+      );
+      const vagasDisponiveis = Math.max(0, totalVagas - vagasOcupadas);
+
+      return {
+        agenda: paraDominioAgenda(row),
+        unidadeNome: row.unidade.nome,
+        servicoNome: row.servico.nome,
+        especialidade: row.servico.especialidade,
+        categoria: row.servico.categoria,
+        profissionalNome: prof.nome,
+        profissionalRegistro: prof.registro,
+        totalHorarios,
+        totalVagas,
+        vagasOcupadas,
+        vagasDisponiveis,
+      };
+    });
+  }
+
+  public async consultarGradeHorarios(
+    filtros: FiltroGradeAgenda
+  ): Promise<SlotGradeAgendaDTO[]> {
+    const filtroProfissional = filtros.profissionalId
+      ? filtros.incluirSemProfissional
+        ? {
+            OR: [
+              { profissionalId: filtros.profissionalId },
+              { profissionalId: null },
+            ],
+          }
+        : { profissionalId: filtros.profissionalId }
+      : {};
+
+    const rows = await this.prisma.vagaAgenda.findMany({
+      where: {
+        dataHoraInicio: {
+          gte: filtros.dataInicio,
+          lte: filtros.dataFim,
+        },
+        agenda: {
+          unidadeId: filtros.unidadeId,
+          situacao: { in: ['PUBLICADA', 'BLOQUEADA'] },
+          ...(filtros.servicoId ? { servicoId: filtros.servicoId } : {}),
+          ...filtroProfissional,
+        },
+      },
+      include: {
+        agenda: {
+          include: {
+            unidade: true,
+            servico: true,
+            profissional: true,
+          },
+        },
+        agendamentos: {
+          where: {
+            status: { not: 'CANCELADO' },
+          },
+          include: {
+            paciente: true,
+            entradaFila: {
+              include: {
+                chamadas: {
+                  orderBy: { dataHoraChamada: 'desc' },
+                  take: 1,
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: { dataHoraInicio: 'asc' },
+    });
+
+    return rows.map((row) => {
+      const prof = formatarDadosProfissional(row.agenda.profissional);
+
+      return {
+        vaga: paraDominioVagaAgenda(row),
+        agendaId: row.agendaId,
+        situacaoAgenda: row.agenda.situacao,
+        unidadeId: row.agenda.unidadeId,
+        unidadeNome: row.agenda.unidade.nome,
+        servicoId: row.agenda.servicoId,
+        servicoNome: row.agenda.servico.nome,
+        especialidade: row.agenda.servico.especialidade,
+        categoria: row.agenda.servico.categoria,
+        profissionalId: row.agenda.profissionalId,
+        profissionalNome: prof.nome,
+        profissionalRegistro: prof.registro,
+        agendamentos: row.agendamentos.map((ag) => {
+          const pacienteDominio = paraDominioPaciente(ag.paciente);
+          return {
+            id: ag.id,
+            protocolo: ag.protocolo,
+            senhaAtendimento: ag.senhaAtendimento,
+            status: ag.status,
+            origemMarcacao: ag.origemMarcacao,
+            pacienteId: ag.pacienteId,
+            pacienteNomeExibicao: pacienteDominio.obterNomeExibicao(),
+            ehPrioritarioLegal: pacienteDominio.ehPrioritarioLegal(
+              row.dataHoraInicio
+            ),
+            criterioPrioridade: pacienteDominio.obterCriterioPrioridade(
+              row.dataHoraInicio
+            ),
+            situacaoFila: ag.entradaFila?.situacao ?? null,
+            guicheSalaChamada:
+              ag.entradaFila?.chamadas[0]?.guicheSala ?? null,
+          };
+        }),
+      };
+    });
   }
 
   public async salvarComVagas(

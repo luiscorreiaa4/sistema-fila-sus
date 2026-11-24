@@ -23,6 +23,7 @@ export type ModoAcessoServico = 'DIRETO' | 'REGULADO';
 export type StatusServico = 'ATIVO' | 'INATIVO';
 
 export type SituacaoAgenda = 'RASCUNHO' | 'PUBLICADA' | 'BLOQUEADA' | 'ENCERRADA';
+export type TurnoAtendimento = 'MANHA' | 'TARDE' | 'NOITE';
 export type OrigemMarcacao = 'APLICATIVO' | 'ASSISTIDA';
 export type StatusAgendamento = 'AGENDADO' | 'REALIZADO' | 'CANCELADO' | 'NAO_REALIZADO';
 
@@ -159,6 +160,16 @@ export interface AgendaDTO {
   situacao: SituacaoAgenda;
   createdAt: string;
   updatedAt: string;
+  unidadeNome?: string;
+  servicoNome?: string;
+  especialidade?: string;
+  categoria?: CategoriaServico;
+  profissionalNome?: string | null;
+  profissionalRegistro?: string | null;
+  totalHorarios?: number;
+  totalVagas?: number;
+  vagasOcupadas?: number;
+  vagasDisponiveis?: number;
 }
 
 export interface VagaDisponivelDTO {
@@ -170,11 +181,78 @@ export interface VagaDisponivelDTO {
   vagasDisponiveis: number;
   unidadeId: string;
   unidadeNome: string;
+  unidadeBairro: string;
+  unidadeMunicipio: string;
   servicoId: string;
   servicoNome: string;
   especialidade: string;
+  categoria: CategoriaServico;
+  orientacoesPreparo: string | null;
   profissionalId: string | null;
   profissionalNome: string | null;
+  profissionalRegistro: string | null;
+}
+
+export interface CatalogoProfissionalPublicoDTO {
+  id: string;
+  nomeExibicao: string;
+  registroConselho: string | null;
+  especialidades: string[];
+  unidadesVinculadas: string[];
+}
+
+export interface CatalogoBuscaVagasResponse {
+  especialidades: string[];
+  profissionais: CatalogoProfissionalPublicoDTO[];
+}
+
+export interface AgendamentoSlotGradeDTO {
+  id: string;
+  protocolo: string;
+  senhaAtendimento: string;
+  status: StatusAgendamento;
+  origemMarcacao: OrigemMarcacao;
+  pacienteId: string;
+  pacienteNomeExibicao: string;
+  ehPrioritarioLegal: boolean;
+  criterioPrioridade: string;
+  situacaoFila: SituacaoFila | null;
+  guicheSalaChamada: string | null;
+}
+
+export interface SlotGradeAgendaDTO {
+  id: string;
+  agendaId: string;
+  dataHoraInicio: string;
+  capacidadeTotal: number;
+  vagasOcupadas: number;
+  vagasDisponiveis: number;
+  situacaoAgenda: SituacaoAgenda;
+  unidadeId: string;
+  unidadeNome: string;
+  servicoId: string;
+  servicoNome: string;
+  especialidade: string;
+  categoria: CategoriaServico;
+  profissionalId: string | null;
+  profissionalNome: string | null;
+  profissionalRegistro: string | null;
+  agendamentos: AgendamentoSlotGradeDTO[];
+}
+
+export interface ResumoDiaGradeDTO {
+  data: string;
+  totalHorarios: number;
+  totalCapacidade: number;
+  totalAgendados: number;
+  totalLivres: number;
+  totalRealizados: number;
+  totalNaFila: number;
+}
+
+export interface GradeAgendaResponse {
+  slots: SlotGradeAgendaDTO[];
+  resumoDias: ResumoDiaGradeDTO[];
 }
 
 export interface AgendamentoDTO {

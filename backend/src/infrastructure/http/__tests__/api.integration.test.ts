@@ -526,15 +526,52 @@ describe('Integração Ponta a Ponta — API HTTP + Casos de Uso + Prisma + Post
     idsParaLimpar.agendaIds.push(criarAgenda.data.agenda.id);
 
     const disp = await apiRequest<{
-      vagas: Array<{ id: string; vagasDisponiveis: number }>;
+      vagas: Array<{
+        id: string;
+        vagasDisponiveis: number;
+        profissionalRegistro: string | null;
+        categoria: string;
+      }>;
     }>(
-      `/api/agendas/disponiveis?unidadeId=${unidadeTesteId}&servicoId=${servicoTesteId}`
+      `/api/agendas/disponiveis?unidadeId=${unidadeTesteId}&servicoId=${servicoTesteId}&especialidade=Cardiologia&buscaProfissional=Integracao&data=${hojeMaceio}&turno=NOITE`
     );
     assert.equal(disp.status, 200);
     assert.equal(disp.data.vagas.length, 2);
+    assert.equal(disp.data.vagas[0].profissionalRegistro, 'CRM 99999/AL');
+    assert.equal(disp.data.vagas[0].categoria, 'CONSULTA');
     vagaConcorrenciaId = disp.data.vagas[0].id;
     vagaSecundariaId = disp.data.vagas[1].id;
     idsParaLimpar.vagaIds.push(vagaConcorrenciaId, vagaSecundariaId);
+
+    // Catálogo público de busca não deve expor CPF/e-mail
+    const catalogo = await apiRequest<{
+      especialidades: string[];
+      profissionais: Array<Record<string, unknown>>;
+    }>('/api/agendas/catalogo-busca');
+    assert.equal(catalogo.status, 200);
+    assert.ok(catalogo.data.especialidades.includes('Cardiologia'));
+    const profCatalogo = catalogo.data.profissionais.find(
+      (p) => p.id === medicoTesteId
+    );
+    assert.ok(profCatalogo);
+    assert.equal('cpf' in profCatalogo, false);
+    assert.equal('email' in profCatalogo, false);
+
+    // Médico não pode criar agenda vinculada a outro profissionalId
+    const agendaOutroProf = await apiRequest('/api/agendas', {
+      method: 'POST',
+      token: tokenMedico,
+      body: {
+        unidadeId: unidadeTesteId,
+        servicoId: servicoTesteId,
+        profissionalId: '00000000-0000-4000-8000-000000000000',
+        dataInicio: hojeMaceio,
+        dataFim: hojeMaceio,
+        diasHorarios: [{ diaSemana: diaSemanaMaceio, horarios: ['23:40'] }],
+        capacidadePorHorario: 1,
+      },
+    });
+    assert.equal(agendaOutroProf.status, 403);
 
     // Concorrência simultânea na última vaga (capacidade = 1)
     const [resA, resB] = await Promise.all([
@@ -827,5 +864,30 @@ describe('Integração Ponta a Ponta — API HTTP + Casos de Uso + Prisma + Post
       where: { entidadeId: { in: [agendamentoIdosoId, entradaIdosoId] } },
     });
     assert.ok(eventos.length >= 4);
+
+    // Consultar grade clínica do médico (slots com agendamentos realizados/ativos + livres)
+    const hojeIsoGrade = obterIntervaloDiaMaceio(new Date()).dataIso;
+    const grade = await apiRequest<{
+      slots: Array<{
+        id: string;
+        agendamentos: Array<{
+          protocolo: string;
+          status: string;
+          situacaoFila: string | null;
+        }>;
+      }>;
+      resumoDias: Array<{
+        data: string;
+        totalHorarios: number;
+        totalAgendados: number;
+      }>;
+    }>(
+      `/api/agendas/grade?unidadeId=${unidadeTesteId}&dataInicio=${hojeIsoGrade}&dataFim=${hojeIsoGrade}`,
+      { token: tokenMedico }
+    );
+    assert.equal(grade.status, 200);
+    assert.ok(grade.data.slots.length >= 2);
+    assert.equal(grade.data.resumoDias[0].data, hojeIsoGrade);
+    assert.ok(grade.data.resumoDias[0].totalAgendados >= 1);
   });
 });

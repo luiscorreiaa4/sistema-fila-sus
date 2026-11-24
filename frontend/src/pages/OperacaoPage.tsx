@@ -7,6 +7,7 @@ import {
   Monitor,
   Radio,
   Shield,
+  Stethoscope,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -70,11 +71,16 @@ export function OperacaoPage() {
     };
   }, [usuario, tipoUsuario, toast]);
 
-  const tabs: Array<{ id: TabOperacao; label: string; icon: typeof Radio }> = [
-    { id: 'fila', label: 'Controle da fila', icon: Radio },
-    { id: 'recepcao', label: 'Recepção e check-in', icon: ClipboardCheck },
-    { id: 'agendas', label: 'Agendas e agendamentos', icon: CalendarDays },
-  ];
+  const tabs = useMemo(() => {
+    const base: Array<{ id: TabOperacao; label: string; icon: typeof Radio }> = [
+      { id: 'fila', label: 'Controle da fila', icon: Radio },
+      ...(perfil !== 'PROFISSIONAL_SAUDE'
+        ? [{ id: 'recepcao' as const, label: 'Recepção e check-in', icon: ClipboardCheck }]
+        : []),
+      { id: 'agendas', label: 'Agendas e agendamentos', icon: CalendarDays },
+    ];
+    return base;
+  }, [perfil]);
 
   const unidadeAtual = useMemo(
     () => unidades.find((u) => u.id === unidadeId) ?? null,
@@ -140,6 +146,16 @@ export function OperacaoPage() {
                 >
                   <Monitor className="h-3.5 w-3.5" />
                   Painel TV
+                </Link>
+              )}
+
+              {(perfil === 'PROFISSIONAL_SAUDE' || perfil === 'ADMINISTRADOR') && (
+                <Link
+                  to="/medico"
+                  className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E2E8F0] px-4 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F4F7FC] transition-colors"
+                >
+                  <Stethoscope className="h-3.5 w-3.5 text-[#1E6BFF]" />
+                  Portal Médico
                 </Link>
               )}
 

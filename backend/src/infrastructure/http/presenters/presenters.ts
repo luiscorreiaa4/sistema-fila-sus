@@ -7,7 +7,11 @@ import { Profissional } from '../../../domain/entities/Profissional';
 import { Servico } from '../../../domain/entities/Servico';
 import { UnidadeSaude } from '../../../domain/entities/UnidadeSaude';
 import { VagaAgenda } from '../../../domain/entities/VagaAgenda';
-import { VagaDisponivelDTO } from '../../../domain/repositories/IAgendaRepository';
+import {
+  AgendaDetalhadaDTO,
+  SlotGradeAgendaDTO,
+  VagaDisponivelDTO,
+} from '../../../domain/repositories/IAgendaRepository';
 import { AgendamentoDetalhadoDTO } from '../../../domain/repositories/IAgendamentoRepository';
 import { EntradaFilaOperacionalDTO } from '../../../domain/repositories/IFilaRepository';
 import { ChamadaPainelPublicoDTO } from '../../../domain/repositories/IPainelPublicoRepository';
@@ -128,11 +132,49 @@ export function apresentarVagaDisponivel(dto: VagaDisponivelDTO) {
     ...apresentarVaga(dto.vaga),
     unidadeId: dto.unidadeId,
     unidadeNome: dto.unidadeNome,
+    unidadeBairro: dto.unidadeBairro,
+    unidadeMunicipio: dto.unidadeMunicipio,
     servicoId: dto.servicoId,
     servicoNome: dto.servicoNome,
     especialidade: dto.especialidade,
+    categoria: dto.categoria,
+    orientacoesPreparo: dto.orientacoesPreparo,
     profissionalId: dto.profissionalId,
     profissionalNome: dto.profissionalNome,
+    profissionalRegistro: dto.profissionalRegistro,
+  };
+}
+
+export function apresentarAgendaDetalhada(dto: AgendaDetalhadaDTO) {
+  return {
+    ...apresentarAgenda(dto.agenda),
+    unidadeNome: dto.unidadeNome,
+    servicoNome: dto.servicoNome,
+    especialidade: dto.especialidade,
+    categoria: dto.categoria,
+    profissionalNome: dto.profissionalNome,
+    profissionalRegistro: dto.profissionalRegistro,
+    totalHorarios: dto.totalHorarios,
+    totalVagas: dto.totalVagas,
+    vagasOcupadas: dto.vagasOcupadas,
+    vagasDisponiveis: dto.vagasDisponiveis,
+  };
+}
+
+export function apresentarSlotGradeAgenda(dto: SlotGradeAgendaDTO) {
+  return {
+    ...apresentarVaga(dto.vaga),
+    situacaoAgenda: dto.situacaoAgenda,
+    unidadeId: dto.unidadeId,
+    unidadeNome: dto.unidadeNome,
+    servicoId: dto.servicoId,
+    servicoNome: dto.servicoNome,
+    especialidade: dto.especialidade,
+    categoria: dto.categoria,
+    profissionalId: dto.profissionalId,
+    profissionalNome: dto.profissionalNome,
+    profissionalRegistro: dto.profissionalRegistro,
+    agendamentos: dto.agendamentos,
   };
 }
 

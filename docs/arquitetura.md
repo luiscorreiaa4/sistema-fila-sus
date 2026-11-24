@@ -33,10 +33,10 @@ sistema-fila-sus/
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   ├── components/            # Componentes reutilizáveis e layout acessível
+│   │   ├── components/            # Componentes reutilizáveis (BuscaVagasPanel, AgendaClinicaView, AgendaBuilderModal, UI acessível)
 │   │   ├── contexts/              # AuthContext (JWT e perfil ativo)
-│   │   ├── pages/                 # Telas: Login, Autocadastro, Portal Cidadão, Operação Recepção/Médico, Admin, Painel Público
-│   │   └── services/              # Cliente HTTP fetch/axios
+│   │   ├── pages/                 # Telas: Login, Autocadastro, Portal Cidadão (/paciente), Portal Médico (/medico), Operação (/operacao), Admin (/admin), Painel Público (/painel)
+│   │   └── services/              # Cliente HTTP fetch
 │   └── package.json
 ├── sql/
 │   └── estrutura_3af.sql          # DDL integridades, Trigger PL/pgSQL, Índices, Roles/Grants e View
@@ -58,7 +58,7 @@ sistema-fila-sus/
 ### 3.1. Abstração e Herança
 - **`abstract class Usuario`** define os atributos comuns (`id`, `cpf: Cpf`, `nomeCompleto`, `nomeSocial`, `email`, `celular`, `senhaHash: Senha`, `status`, `tentativasMalsucedidas`, `bloqueioTemporarioAte`, `ultimoAcesso`) e os contratos abstratos (`obterPerfilAcesso()`, `podeAutenticar()`, `validarRegrasEspecificas()`), além dos métodos compartilhados de bloqueio de login (`registrarFalhaAutenticacao()`, `registrarSucessoAutenticacao()`, `estaBloqueado()`).
 - **`class Paciente extends Usuario`** adiciona atributos clínicos/sociais (`cns: Cns`, `dataNascimento`, `possuiDeficiencia`, `tiposDeficiencia`, `situacaoCns`, `origemCadastro`, `cienciaPrivacidadeEm`) e métodos próprios (`calcularIdade()`, `ehPrioritarioLegal()`, `obterCriterioPrioridade()`, `obterNomeExibicao()`).
-- **`class Profissional extends Usuario`** adiciona atributos funcionais (`conselhoProfissional`, `numeroRegistro`, `ufRegistro`, `nivelAcesso`, `situacaoAcesso`, `unidadesVinculadas`, `especialidades`) e métodos próprios (`estaVinculadoAUnidade(unidadeId)`, `podeGerenciarAgenda()`, `podeChamarFila()`).
+- **`class Profissional extends Usuario`** adiciona atributos funcionais (`conselhoProfissional`, `numeroRegistro`, `ufRegistro`, `nivelAcesso`, `situacaoAcesso`, `unidadesVinculadas`, `especialidades`) e métodos próprios (`estaVinculadoAUnidade(unidadeId)`, `podeGerenciarAgenda()`, `podeChamarFila()`, `obterRegistroConselhoFormatado()`).
 
 ### 3.2. Encapsulamento
 - **Value Objects imutáveis:**

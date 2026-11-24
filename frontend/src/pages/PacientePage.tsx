@@ -21,12 +21,9 @@ import { useToast } from '../contexts/ToastContext';
 import { useViaCep } from '../hooks/useViaCep';
 import {
   agendamentosApi,
-  agendasApi,
   extrairMensagemErro,
   filaApi,
   pacientesApi,
-  servicosApi,
-  unidadesApi,
 } from '../services/api';
 import type {
   AgendamentoDTO,
@@ -35,10 +32,8 @@ import type {
   PacienteDTO,
   PosicaoPacienteFilaDTO,
   PossuiDeficiencia,
-  ServicoDTO,
   StatusAgendamento,
   TipoDeficiencia,
-  UnidadeSaudeDTO,
   VagaDisponivelDTO,
 } from '../types/api';
 import {
@@ -53,14 +48,13 @@ import {
   formatarCep,
   formatarCns,
   formatarData,
-  formatarDataCurta,
   formatarDataHora,
-  formatarHora,
   maskCep,
   maskTelefone,
   nullableTrim,
   somenteDigitos,
 } from '../utils/formatters';
+import { BuscaVagasPanel } from '../components/agendamento/BuscaVagasPanel';
 import { Navbar } from '../components/layout/Navbar';
 import { EmptyState } from '../components/ui/EmptyState';
 import { FormField, SelectInput, TextAreaInput, TextInput } from '../components/ui/FormControls';
@@ -122,17 +116,20 @@ export function PacientePage() {
   const [cancelando, setCancelando] = useState(false);
 
   // Fluxo Agendar
-  const [unidades, setUnidades] = useState<UnidadeSaudeDTO[]>([]);
-  const [servicos, setServicos] = useState<ServicoDTO[]>([]);
-  const [vagas, setVagas] = useState<VagaDisponivelDTO[]>([]);
-  const [loadingCatalogo, setLoadingCatalogo] = useState(false);
-  const [loadingVagas, setLoadingVagas] = useState(false);
-
-  const [unidadeSel, setUnidadeSel] = useState(searchParams.get('unidadeId') ?? '');
-  const [servicoSel, setServicoSel] = useState(searchParams.get('servicoId') ?? '');
   const [vagaConfirmando, setVagaConfirmando] = useState<VagaDisponivelDTO | null>(null);
   const [marcando, setMarcando] = useState(false);
   const [comprovante, setComprovante] = useState<AgendamentoDTO | null>(null);
+  const [refreshBuscaTrigger, setRefreshBuscaTrigger] = useState(0);
+
+  const filtrosIniciaisBusca = useMemo(
+    () => ({
+      unidadeId: searchParams.get('unidadeId') ?? undefined,
+      servicoId: searchParams.get('servicoId') ?? undefined,
+      especialidade: searchParams.get('especialidade') ?? undefined,
+      profissionalId: searchParams.get('profissionalId') ?? undefined,
+    }),
+    [searchParams]
+  );
 
   // Perfil
   const [perfilPaciente, setPerfilPaciente] = useState<PacienteDTO | null>(null);
@@ -235,64 +232,6 @@ export function PacientePage() {
     return () => window.clearInterval(interval);
   }, [carregarMinhaPosicao, carregarMeusAgendamentos, carregarPerfil]);
 
-  // Carrega catálogo de unidades/serviços para aba agendar
-  useEffect(() => {
-    if (aba !== 'agendar') return;
-    let ativo = true;
-    const carregar = async () => {
-      setLoadingCatalogo(true);
-      try {
-        const [uRes, sRes] = await Promise.all([
-          unidadesApi.listar({ status: 'ATIVA' }),
-          servicosApi.listar(),
-        ]);
-        if (!ativo) return;
-        setUnidades(uRes.unidades);
-        setServicos(sRes.servicos);
-      } catch (err) {
-        toast.error('Erro ao carregar catálogo', extrairMensagemErro(err));
-      } finally {
-        if (ativo) setLoadingCatalogo(false);
-      }
-    };
-    void carregar();
-    return () => {
-      ativo = false;
-    };
-  }, [aba, toast]);
-
-  const buscarVagas = useCallback(async () => {
-    setLoadingVagas(true);
-    try {
-      const res = await agendasApi.listarDisponiveis({
-        unidadeId: unidadeSel || undefined,
-        servicoId: servicoSel || undefined,
-      });
-      setVagas(res.vagas);
-    } catch (err) {
-      toast.error('Erro ao consultar vagas', extrairMensagemErro(err));
-    } finally {
-      setLoadingVagas(false);
-    }
-  }, [unidadeSel, servicoSel, toast]);
-
-  useEffect(() => {
-    if (aba === 'agendar') {
-      void buscarVagas();
-    }
-  }, [aba, buscarVagas]);
-
-  const vagasAgrupadasPorData = useMemo(() => {
-    const grupos = new Map<string, VagaDisponivelDTO[]>();
-    for (const vaga of vagas) {
-      const dia = formatarDataCurta(vaga.dataHoraInicio);
-      const lista = grupos.get(dia) ?? [];
-      lista.push(vaga);
-      grupos.set(dia, lista);
-    }
-    return Array.from(grupos.entries());
-  }, [vagas]);
-
   const handleConfirmarAgendamento = async () => {
     if (!vagaConfirmando) return;
     setMarcando(true);
@@ -300,11 +239,12 @@ export function PacientePage() {
       const res = await agendamentosApi.marcar({ vagaId: vagaConfirmando.id });
       setComprovante(res.agendamento);
       setVagaConfirmando(null);
+      setRefreshBuscaTrigger((n) => n + 1);
       toast.success(
         'Agendamento confirmado!',
         `Protocolo ${res.agendamento.protocolo}`
       );
-      await Promise.all([carregarMeusAgendamentos(), buscarVagas()]);
+      await carregarMeusAgendamentos();
     } catch (err) {
       toast.error('Não foi possível agendar', extrairMensagemErro(err));
     } finally {
@@ -637,143 +577,24 @@ export function PacientePage() {
         {/* Aba 2: agendar atendimento */}
         {aba === 'agendar' && (
           <section className="space-y-6">
-            <div className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 sm:p-8 shadow-soft space-y-6">
+            <div className="rounded-[28px] bg-white border border-[#E2E8F0] p-5 sm:p-8 shadow-soft space-y-6">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
-                  Marcação em 3 passos
+                  Busca inteligente de consultas e exames
                 </span>
                 <h2 className="mt-1 font-display text-2xl font-normal text-[#0F172A]">
                   Agendar consulta ou procedimento
                 </h2>
                 <p className="mt-1 text-xs text-[#64748B]">
-                  Selecione a unidade e o serviço desejado para visualizar os
-                  horários publicados disponíveis.
+                  Pesquise por especialidade, nome do médico, unidade de saúde, data específica ou turno desejado.
                 </p>
               </div>
 
-              {loadingCatalogo ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Skeleton className="h-12" />
-                  <Skeleton className="h-12" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField label="1. Unidade de saúde" htmlFor="ag-unidade">
-                    <SelectInput
-                      id="ag-unidade"
-                      value={unidadeSel}
-                      onChange={(e) => setUnidadeSel(e.target.value)}
-                    >
-                      <option value="">Todas as unidades ativas</option>
-                      {unidades.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.nome} ({u.endereco.municipio})
-                        </option>
-                      ))}
-                    </SelectInput>
-                  </FormField>
-
-                  <FormField label="2. Serviço ou especialidade" htmlFor="ag-servico">
-                    <SelectInput
-                      id="ag-servico"
-                      value={servicoSel}
-                      onChange={(e) => setServicoSel(e.target.value)}
-                    >
-                      <option value="">Todos os serviços ativos</option>
-                      {servicos.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.nome} ({s.especialidade})
-                        </option>
-                      ))}
-                    </SelectInput>
-                  </FormField>
-                </div>
-              )}
-
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
-                    3. Horários disponíveis ({vagas.length})
-                  </h3>
-                  {(unidadeSel || servicoSel) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUnidadeSel('');
-                        setServicoSel('');
-                      }}
-                      className="text-xs font-medium text-[#1E6BFF] hover:underline"
-                    >
-                      Limpar filtros
-                    </button>
-                  )}
-                </div>
-
-                {loadingVagas ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <CardSkeleton />
-                    <CardSkeleton />
-                    <CardSkeleton />
-                  </div>
-                ) : vagasAgrupadasPorData.length === 0 ? (
-                  <EmptyState
-                    icon={<CalendarPlus className="h-6 w-6" />}
-                    title="Nenhuma vaga disponível para este filtro"
-                    description="Tente selecionar outra unidade de saúde ou outro serviço ativo."
-                    className="border-dashed bg-[#F8FAFC]"
-                  />
-                ) : (
-                  <div className="space-y-6">
-                    {vagasAgrupadasPorData.map(([dia, lista]) => (
-                      <div key={dia} className="space-y-3">
-                        <h4 className="inline-flex items-center gap-2 rounded-full bg-[#EFF4FB] px-3.5 py-1 text-xs font-semibold text-[#1E6BFF] capitalize">
-                          <Clock className="h-3.5 w-3.5" />
-                          {dia}
-                        </h4>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                          {lista.map((vaga) => (
-                            <div
-                              key={vaga.id}
-                              className="rounded-[20px] border border-[#E2E8F0] bg-white p-4 hover:border-[#1E6BFF]/40 hover:shadow-soft transition-all flex flex-col justify-between gap-3"
-                            >
-                              <div>
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="font-display text-2xl font-medium text-[#0F172A]">
-                                    {formatarHora(vaga.dataHoraInicio)}
-                                  </span>
-                                  <StatusBadge tone="success">
-                                    {vaga.vagasDisponiveis} livre(s)
-                                  </StatusBadge>
-                                </div>
-                                <p className="mt-2 text-sm font-medium text-[#0F172A]">
-                                  {vaga.servicoNome}
-                                </p>
-                                <p className="mt-0.5 text-xs text-[#64748B]">
-                                  {vaga.unidadeNome}
-                                </p>
-                                {vaga.profissionalNome && (
-                                  <p className="mt-1 text-xs text-[#64748B]">
-                                    Prof.: {vaga.profissionalNome}
-                                  </p>
-                                )}
-                              </div>
-
-                              <PillButton
-                                size="sm"
-                                fullWidth
-                                onClick={() => setVagaConfirmando(vaga)}
-                              >
-                                Selecionar horário
-                              </PillButton>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <BuscaVagasPanel
+                key={refreshBuscaTrigger}
+                filtrosIniciais={filtrosIniciaisBusca}
+                onSelecionarVaga={(vaga) => setVagaConfirmando(vaga)}
+              />
             </div>
           </section>
         )}
@@ -1220,24 +1041,42 @@ export function PacientePage() {
       >
         {vagaConfirmando && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-[#EFF4FB] border border-[#DBEAFE] p-4 space-y-2">
-              <p className="text-xs font-semibold text-[#1E6BFF]">
-                {vagaConfirmando.servicoNome}
-              </p>
+            <div className="rounded-2xl bg-[#EFF4FB] border border-[#DBEAFE] p-4 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-[#1E6BFF]">
+                  {vagaConfirmando.servicoNome}
+                </p>
+                <StatusBadge tone="info">{vagaConfirmando.especialidade}</StatusBadge>
+              </div>
               <p className="text-sm font-medium text-[#0F172A] flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-[#1E6BFF]" />
-                {vagaConfirmando.unidadeNome}
+                <Building2 className="h-4 w-4 shrink-0 text-[#1E6BFF]" />
+                <span>
+                  {vagaConfirmando.unidadeNome} · {vagaConfirmando.unidadeBairro},{' '}
+                  {vagaConfirmando.unidadeMunicipio}
+                </span>
               </p>
               <p className="text-sm text-[#0F172A] flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#1E6BFF]" />
+                <Clock className="h-4 w-4 shrink-0 text-[#1E6BFF]" />
                 {formatarDataHora(vagaConfirmando.dataHoraInicio)}
               </p>
               {vagaConfirmando.profissionalNome && (
-                <p className="text-xs text-[#64748B]">
-                  Profissional: {vagaConfirmando.profissionalNome}
+                <p className="text-xs text-[#0F172A] flex items-center gap-2">
+                  <User className="h-3.5 w-3.5 shrink-0 text-[#1E6BFF]" />
+                  <span>
+                    {vagaConfirmando.profissionalNome}
+                    {vagaConfirmando.profissionalRegistro
+                      ? ` · ${vagaConfirmando.profissionalRegistro}`
+                      : ''}
+                  </span>
                 </p>
               )}
             </div>
+            {vagaConfirmando.orientacoesPreparo && (
+              <div className="rounded-2xl bg-amber-50/80 border border-amber-200 p-3.5 text-xs text-amber-900">
+                <strong>Orientações de preparo:</strong>{' '}
+                {vagaConfirmando.orientacoesPreparo}
+              </div>
+            )}
             <p className="text-xs text-[#64748B] flex items-start gap-2">
               <ShieldCheck className="h-4 w-4 shrink-0 text-[#1E6BFF] mt-0.5" />
               No dia do atendimento, apresente o protocolo gerado ou seu CPF na

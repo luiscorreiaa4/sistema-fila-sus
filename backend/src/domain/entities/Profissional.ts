@@ -175,6 +175,16 @@ export class Profissional extends Usuario {
     return this.status === 'ATIVO' && this.situacaoAcesso === 'ATIVO';
   }
 
+  public obterRegistroConselhoFormatado(): string | null {
+    if (this.conselhoProfissional && this.numeroRegistro && this.ufRegistro) {
+      return `${this.conselhoProfissional} ${this.numeroRegistro}/${this.ufRegistro}`;
+    }
+    if (this.conselhoProfissional && this.numeroRegistro) {
+      return `${this.conselhoProfissional} ${this.numeroRegistro}`;
+    }
+    return null;
+  }
+
   public getConselhoProfissional(): string | null {
     return this.conselhoProfissional;
   }

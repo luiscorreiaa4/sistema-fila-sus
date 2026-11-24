@@ -7,6 +7,7 @@ import { CadastroPacientePage } from './pages/CadastroPacientePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
+import { MedicoPage } from './pages/MedicoPage';
 import { OperacaoPage } from './pages/OperacaoPage';
 import { PacientePage } from './pages/PacientePage';
 import { PainelPublicoPage } from './pages/PainelPublicoPage';
@@ -76,6 +77,17 @@ export function App() {
                   allowedRoles={['ATENDENTE', 'PROFISSIONAL_SAUDE', 'ADMINISTRADOR']}
                 >
                   <OperacaoPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/medico"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['PROFISSIONAL_SAUDE', 'ADMINISTRADOR']}
+                >
+                  <MedicoPage />
                 </ProtectedRoute>
               }
             />

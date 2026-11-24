@@ -32,9 +32,12 @@ export {
 } from './use-cases/servicos/ServicoUseCases';
 export {
   AlterarSituacaoAgendaUseCase,
+  ConsultarGradeAgendaUseCase,
   CriarAgendaUseCase,
+  ListarAgendasDetalhadasUseCase,
   ListarAgendasUseCase,
   ListarVagasDisponiveisUseCase,
+  ObterCatalogoBuscaVagasUseCase,
 } from './use-cases/agendas/AgendaUseCases';
 export {
   CancelarAgendamentoUseCase,

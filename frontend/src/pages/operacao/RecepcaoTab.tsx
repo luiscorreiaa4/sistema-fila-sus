@@ -9,7 +9,6 @@ import {
 import { useToast } from '../../contexts/ToastContext';
 import {
   agendamentosApi,
-  agendasApi,
   extrairMensagemErro,
   filaApi,
   pacientesApi,
@@ -18,17 +17,16 @@ import type {
   EntradaFilaDTO,
   PacienteDTO,
   PerfilAcesso,
-  VagaDisponivelDTO,
 } from '../../types/api';
 import {
   LABELS_CRITERIO_PRIORIDADE,
   LABELS_GRUPO_ATENDIMENTO,
   formatarCns,
   formatarData,
-  formatarDataHora,
   maskCpf,
   somenteDigitos,
 } from '../../utils/formatters';
+import { BuscaVagasPanel } from '../../components/agendamento/BuscaVagasPanel';
 import { PacienteCadastroForm } from '../../components/forms/PacienteCadastroForm';
 import { FormField, TextInput } from '../../components/ui/FormControls';
 import { Modal } from '../../components/ui/Modal';
@@ -65,8 +63,6 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
 
   // Modal de marcação assistida
   const [modalMarcar, setModalMarcar] = useState(false);
-  const [vagasUnidade, setVagasUnidade] = useState<VagaDisponivelDTO[]>([]);
-  const [carregandoVagas, setCarregandoVagas] = useState(false);
   const [marcandoVagaId, setMarcandoVagaId] = useState<string | null>(null);
 
   const handleBuscarCpf = async (e: FormEvent) => {
@@ -127,18 +123,9 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
     }
   };
 
-  const abrirMarcacaoAssistida = async () => {
+  const abrirMarcacaoAssistida = () => {
     if (!pacienteEncontrado) return;
     setModalMarcar(true);
-    setCarregandoVagas(true);
-    try {
-      const res = await agendasApi.listarDisponiveis({ unidadeId });
-      setVagasUnidade(res.vagas);
-    } catch (err) {
-      toast.error('Erro ao carregar vagas', extrairMensagemErro(err));
-    } finally {
-      setCarregandoVagas(false);
-    }
   };
 
   const handleMarcarParaPaciente = async (vagaId: string) => {
@@ -457,44 +444,14 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
             ? `Selecionar vaga aberta nesta unidade para ${pacienteEncontrado.nomeExibicao}`
             : undefined
         }
-        size="lg"
+        size="xl"
       >
-        {carregandoVagas ? (
-          <p className="text-sm text-[#64748B] py-6 text-center">
-            Carregando vagas disponíveis nesta unidade...
-          </p>
-        ) : vagasUnidade.length === 0 ? (
-          <p className="text-sm text-[#64748B] py-6 text-center">
-            Nenhuma vaga publicada disponível nesta unidade no momento.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {vagasUnidade.map((vaga) => (
-              <div
-                key={vaga.id}
-                className="rounded-2xl border border-[#E2E8F0] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-[#0F172A]">
-                    {vaga.servicoNome}
-                  </p>
-                  <p className="text-xs text-[#64748B]">
-                    {formatarDataHora(vaga.dataHoraInicio)} ·{' '}
-                    {vaga.vagasDisponiveis} vaga(s) livre(s)
-                    {vaga.profissionalNome ? ` · ${vaga.profissionalNome}` : ''}
-                  </p>
-                </div>
-                <PillButton
-                  size="sm"
-                  loading={marcandoVagaId === vaga.id}
-                  onClick={() => void handleMarcarParaPaciente(vaga.id)}
-                >
-                  Agendar vaga
-                </PillButton>
-              </div>
-            ))}
-          </div>
-        )}
+        <BuscaVagasPanel
+          compact
+          unidadeFixaId={unidadeId}
+          vagaEmProcessamentoId={marcandoVagaId}
+          onSelecionarVaga={(vaga) => void handleMarcarParaPaciente(vaga.id)}
+        />
       </Modal>
     </div>
   );

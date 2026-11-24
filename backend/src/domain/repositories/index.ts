@@ -9,9 +9,13 @@ export type {
 } from './IProfissionalRepository';
 export type { FiltroServicos, IServicoRepository } from './IServicoRepository';
 export type {
+  AgendaDetalhadaDTO,
+  AgendamentoSlotGradeDTO,
   FiltroAgendas,
+  FiltroGradeAgenda,
   FiltroVagasDisponiveis,
   IAgendaRepository,
+  SlotGradeAgendaDTO,
   VagaDisponivelDTO,
 } from './IAgendaRepository';
 export type {

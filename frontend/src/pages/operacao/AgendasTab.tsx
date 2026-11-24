@@ -3,14 +3,13 @@ import {
   Ban,
   CalendarDays,
   CalendarPlus,
+  CalendarRange,
   CheckCircle2,
   ClipboardList,
   Lock,
-  Plus,
   Search,
   Send,
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
   agendamentosApi,
@@ -23,7 +22,6 @@ import {
 import type {
   AgendaDTO,
   AgendamentoDetalhadoDTO,
-  ConfiguracaoDiaHorario,
   PerfilAcesso,
   ProfissionalDTO,
   ServicoDTO,
@@ -39,11 +37,12 @@ import {
   formatarDataHora,
   hojeIsoMaceio,
   maskCpf,
-  somarDiasIso,
   somenteDigitos,
 } from '../../utils/formatters';
+import { AgendaBuilderModal } from '../../components/agendas/AgendaBuilderModal';
+import { AgendaClinicaView } from '../../components/agendas/AgendaClinicaView';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { FormField, SelectInput, TextAreaInput, TextInput } from '../../components/ui/FormControls';
+import { FormField, TextAreaInput, TextInput } from '../../components/ui/FormControls';
 import { Modal } from '../../components/ui/Modal';
 import { PillButton } from '../../components/ui/PillButton';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -53,17 +52,6 @@ interface AgendasTabProps {
   unidadeId: string;
   perfil: PerfilAcesso;
 }
-
-const HORARIOS_SUGERIDOS = [
-  '08:00',
-  '09:00',
-  '10:00',
-  '11:00',
-  '14:00',
-  '15:00',
-  '16:00',
-  '17:00',
-];
 
 function badgeAgenda(situacao: SituacaoAgenda) {
   switch (situacao) {
@@ -92,7 +80,6 @@ function badgeStatusAg(status: StatusAgendamento) {
 }
 
 export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
-  const { usuario } = useAuth();
   const toast = useToast();
 
   const podeGerirAgenda =
@@ -100,7 +87,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
   const podeCancelarOuCheckin =
     perfil === 'ATENDENTE' || perfil === 'ADMINISTRADOR';
 
-  const [subAba, setSubAba] = useState<'agendas' | 'agendamentos'>('agendas');
+  const [subAba, setSubAba] = useState<'grade' | 'agendas' | 'agendamentos'>('grade');
 
   // Agendas
   const [agendas, setAgendas] = useState<AgendaDTO[]>([]);
@@ -108,6 +95,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
   const [profissionais, setProfissionais] = useState<ProfissionalDTO[]>([]);
   const [loadingAgendas, setLoadingAgendas] = useState(true);
   const [alterandoAgendaId, setAlterandoAgendaId] = useState<string | null>(null);
+  const [refreshGradeTrigger, setRefreshGradeTrigger] = useState(0);
 
   // Agendamentos da unidade
   const [agendamentos, setAgendamentos] = useState<AgendamentoDetalhadoDTO[]>([]);
@@ -118,21 +106,6 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
 
   // Modal de nova agenda
   const [modalAgenda, setModalAgenda] = useState(false);
-  const [servicoId, setServicoId] = useState('');
-  const [profissionalId, setProfissionalId] = useState('');
-  const [dataInicio, setDataInicio] = useState(hojeIsoMaceio());
-  const [dataFim, setDataFim] = useState(() => somarDiasIso(hojeIsoMaceio(), 14));
-  const [diasSelecionados, setDiasSelecionados] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [horariosSelecionados, setHorariosSelecionados] = useState<string[]>([
-    '08:00',
-    '09:00',
-    '10:00',
-    '14:00',
-  ]);
-  const [horarioCustom, setHorarioCustom] = useState('');
-  const [capacidadePorHorario, setCapacidadePorHorario] = useState(4);
-  const [publicarAoCriar, setPublicarAoCriar] = useState(true);
-  const [criandoAgenda, setCriandoAgenda] = useState(false);
 
   // Modal de cancelamento
   const [agCancelar, setAgCancelar] = useState<AgendamentoDetalhadoDTO | null>(null);
@@ -149,10 +122,6 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
       ]);
       setAgendas(agRes.agendas);
       setServicos(svRes.servicos);
-      if (!servicoId) {
-        const primeiroAtivo = svRes.servicos.find((s) => s.status === 'ATIVO');
-        if (primeiroAtivo) setServicoId(primeiroAtivo.id);
-      }
 
       if (perfil === 'ADMINISTRADOR') {
         const profRes = await profissionaisApi.listar({
@@ -166,7 +135,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
     } finally {
       setLoadingAgendas(false);
     }
-  }, [unidadeId, perfil, servicoId, toast]);
+  }, [unidadeId, perfil, toast]);
 
   const carregarAgendamentos = useCallback(async () => {
     if (!unidadeId) return;
@@ -211,72 +180,11 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
           : undefined
       );
       await carregarAgendas();
+      setRefreshGradeTrigger((v) => v + 1);
     } catch (err) {
       toast.error('Erro ao alterar situação', extrairMensagemErro(err));
     } finally {
       setAlterandoAgendaId(null);
-    }
-  };
-
-  const adicionarHorarioCustom = () => {
-    const limpo = horarioCustom.trim();
-    if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(limpo)) {
-      toast.warning('Horário inválido', 'Use o formato HH:mm (ex.: 13:30).');
-      return;
-    }
-    if (!horariosSelecionados.includes(limpo)) {
-      setHorariosSelecionados((prev) => [...prev, limpo].sort());
-    }
-    setHorarioCustom('');
-  };
-
-  const handleCriarAgenda = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!servicoId) {
-      toast.warning('Serviço obrigatório', 'Selecione um serviço ativo.');
-      return;
-    }
-    if (diasSelecionados.length === 0) {
-      toast.warning('Dias obrigatórios', 'Selecione ao menos um dia da semana.');
-      return;
-    }
-    if (horariosSelecionados.length === 0) {
-      toast.warning('Horários obrigatórios', 'Selecione ao menos um horário.');
-      return;
-    }
-
-    const diasHorarios: ConfiguracaoDiaHorario[] = diasSelecionados
-      .slice()
-      .sort((a, b) => a - b)
-      .map((diaSemana) => ({
-        diaSemana,
-        horarios: horariosSelecionados.slice().sort(),
-      }));
-
-    setCriandoAgenda(true);
-    try {
-      const res = await agendasApi.criar({
-        unidadeId,
-        servicoId,
-        profissionalId: profissionalId || null,
-        dataInicio,
-        dataFim,
-        diasHorarios,
-        capacidadePorHorario: Number(capacidadePorHorario),
-        publicar: publicarAoCriar,
-      });
-      toast.success(
-        publicarAoCriar ? 'Agenda criada e publicada.' : 'Agenda salva como rascunho.',
-        res.vagasCriadas > 0
-          ? `${res.vagasCriadas} vagas geradas para agendamento.`
-          : undefined
-      );
-      setModalAgenda(false);
-      await carregarAgendas();
-    } catch (err) {
-      toast.error('Erro ao criar agenda', extrairMensagemErro(err));
-    } finally {
-      setCriandoAgenda(false);
     }
   };
 
@@ -321,6 +229,18 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
         <div className="grid grid-cols-1 sm:inline-flex w-full sm:w-auto gap-1 rounded-2xl sm:rounded-full bg-white border border-[#E2E8F0] p-1.5 sm:p-1 shadow-pill">
           <button
             type="button"
+            onClick={() => setSubAba('grade')}
+            className={`w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-xl sm:rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+              subAba === 'grade'
+                ? 'bg-[#1E6BFF] text-white'
+                : 'text-[#64748B] hover:text-[#0F172A]'
+            }`}
+          >
+            <CalendarRange className="h-3.5 w-3.5 shrink-0" />
+            Calendário / Grade Clínica
+          </button>
+          <button
+            type="button"
             onClick={() => setSubAba('agendas')}
             className={`w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-xl sm:rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
               subAba === 'agendas'
@@ -329,7 +249,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             }`}
           >
             <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-            Agendas ({agendas.length})
+            Escalas ({agendas.length})
           </button>
           <button
             type="button"
@@ -345,7 +265,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
           </button>
         </div>
 
-        {subAba === 'agendas' && podeGerirAgenda && (
+        {(subAba === 'agendas' || subAba === 'grade') && podeGerirAgenda && (
           <PillButton
             size="sm"
             icon={<CalendarPlus className="h-3.5 w-3.5" />}
@@ -356,6 +276,16 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
           </PillButton>
         )}
       </div>
+
+      {/* Sub-aba: calendário / grade clínica */}
+      {subAba === 'grade' && (
+        <AgendaClinicaView
+          unidadeId={unidadeId}
+          profissionaisOpcoes={profissionais}
+          onAbrirNovaAgenda={podeGerirAgenda ? () => setModalAgenda(true) : undefined}
+          refreshTrigger={refreshGradeTrigger}
+        />
+      )}
 
       {/* Sub-aba: agendas */}
       {subAba === 'agendas' && (
@@ -377,6 +307,12 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {agendas.map((ag) => {
                 const ocupado = alterandoAgendaId === ag.id;
+                const totalVagas = ag.totalVagas ?? 0;
+                const vagasOcupadas = ag.vagasOcupadas ?? 0;
+                const vagasLivres = ag.vagasDisponiveis ?? 0;
+                const pct =
+                  totalVagas > 0 ? Math.min(100, Math.round((vagasOcupadas / totalVagas) * 100)) : 0;
+
                 return (
                   <article
                     key={ag.id}
@@ -386,16 +322,41 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h3 className="font-display text-base font-semibold text-[#0F172A]">
-                            {nomeServico(ag.servicoId)}
+                            {ag.servicoNome ?? nomeServico(ag.servicoId)}
                           </h3>
                           <p className="text-xs text-[#64748B] mt-0.5">
                             {formatarData(ag.dataInicio)} até{' '}
                             {formatarData(ag.dataFim)} · {ag.capacidadePorHorario}{' '}
                             vaga(s)/horário
                           </p>
+                          <p className="text-xs font-medium text-[#1E6BFF] mt-1">
+                            {ag.profissionalNome
+                              ? `${ag.profissionalNome}${ag.profissionalRegistro ? ` · ${ag.profissionalRegistro}` : ''}`
+                              : 'Equipe da unidade (sem médico fixo)'}
+                          </p>
                         </div>
                         {badgeAgenda(ag.situacao)}
                       </div>
+
+                      {totalVagas > 0 && (
+                        <div className="rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] p-3 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[#64748B]">
+                              <strong className="text-[#0F172A]">{vagasOcupadas}</strong> de{' '}
+                              {totalVagas} vagas marcadas
+                            </span>
+                            <span className="font-semibold text-emerald-700">
+                              {vagasLivres} livre(s)
+                            </span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-[#E2E8F0] overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-[#1E6BFF] transition-all"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex flex-wrap gap-1.5">
                         {ag.diasHorarios.map((d) => (
@@ -652,210 +613,19 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
         </section>
       )}
 
-      {/* Modal de criação de agenda */}
-      <Modal
+      {/* Construtor inteligente de agenda */}
+      <AgendaBuilderModal
         open={modalAgenda}
         onClose={() => setModalAgenda(false)}
-        title="Nova agenda de atendimento"
-        subtitle="Defina período, dias da semana, horários e capacidade por vaga."
-        size="lg"
-      >
-        <form onSubmit={handleCriarAgenda} className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Serviço" htmlFor="ag-new-servico" required>
-              <SelectInput
-                id="ag-new-servico"
-                value={servicoId}
-                onChange={(e) => setServicoId(e.target.value)}
-              >
-                <option value="">Selecione...</option>
-                {servicos
-                  .filter((s) => s.status === 'ATIVO')
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nome} ({s.especialidade})
-                    </option>
-                  ))}
-              </SelectInput>
-            </FormField>
-
-            <FormField
-              label="Profissional (opcional)"
-              htmlFor="ag-new-prof"
-              hint={
-                perfil === 'PROFISSIONAL_SAUDE'
-                  ? 'Vincule a si mesmo ou deixe aberto para a equipe.'
-                  : undefined
-              }
-            >
-              <SelectInput
-                id="ag-new-prof"
-                value={profissionalId}
-                onChange={(e) => setProfissionalId(e.target.value)}
-              >
-                <option value="">Sem profissional específico</option>
-                {perfil === 'ADMINISTRADOR'
-                  ? profissionais.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.nomeExibicao}
-                      </option>
-                    ))
-                  : usuario && (
-                      <option value={usuario.id}>
-                        {usuario.nomeExibicao} (Eu mesmo)
-                      </option>
-                    )}
-              </SelectInput>
-            </FormField>
-
-            <FormField label="Data início" htmlFor="ag-new-ini" required>
-              <TextInput
-                id="ag-new-ini"
-                type="date"
-                value={dataInicio}
-                onChange={(e) => setDataInicio(e.target.value)}
-              />
-            </FormField>
-
-            <FormField label="Data fim" htmlFor="ag-new-fim" required>
-              <TextInput
-                id="ag-new-fim"
-                type="date"
-                value={dataFim}
-                onChange={(e) => setDataFim(e.target.value)}
-              />
-            </FormField>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-[#0F172A]">
-              Dias da semana <span className="text-[#1E6BFF]">*</span>
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {DIAS_SEMANA.map((dia) => {
-                const ativo = diasSelecionados.includes(dia.valor);
-                return (
-                  <button
-                    key={dia.valor}
-                    type="button"
-                    onClick={() =>
-                      setDiasSelecionados((prev) =>
-                        prev.includes(dia.valor)
-                          ? prev.filter((x) => x !== dia.valor)
-                          : [...prev, dia.valor]
-                      )
-                    }
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium border transition-colors ${
-                      ativo
-                        ? 'bg-[#1E6BFF] text-white border-[#1E6BFF]'
-                        : 'bg-white text-[#64748B] border-[#E2E8F0]'
-                    }`}
-                  >
-                    {dia.curto}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-2.5">
-            <p className="text-xs font-medium text-[#0F172A]">
-              Horários de atendimento <span className="text-[#1E6BFF]">*</span>
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {Array.from(
-                new Set([...HORARIOS_SUGERIDOS, ...horariosSelecionados])
-              )
-                .sort()
-                .map((h) => {
-                  const ativo = horariosSelecionados.includes(h);
-                  return (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() =>
-                        setHorariosSelecionados((prev) =>
-                          prev.includes(h)
-                            ? prev.filter((x) => x !== h)
-                            : [...prev, h].sort()
-                        )
-                      }
-                      className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
-                        ativo
-                          ? 'bg-[#EFF4FB] text-[#1E6BFF] border-[#1E6BFF]'
-                          : 'bg-white text-[#64748B] border-[#E2E8F0]'
-                      }`}
-                    >
-                      {h}
-                    </button>
-                  );
-                })}
-            </div>
-
-            <div className="flex items-center gap-2 pt-1 w-full sm:max-w-xs">
-              <TextInput
-                value={horarioCustom}
-                onChange={(e) => setHorarioCustom(e.target.value)}
-                placeholder="Outro horário (HH:mm)"
-              />
-              <button
-                type="button"
-                onClick={adicionarHorarioCustom}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF] hover:bg-[#DBEAFE]"
-                title="Adicionar horário"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-            <FormField
-              label="Capacidade por horário"
-              htmlFor="ag-new-cap"
-              required
-            >
-              <TextInput
-                id="ag-new-cap"
-                type="number"
-                min={1}
-                value={capacidadePorHorario}
-                onChange={(e) =>
-                  setCapacidadePorHorario(Math.max(1, Number(e.target.value) || 1))
-                }
-              />
-            </FormField>
-
-            <label className="inline-flex items-center gap-2.5 text-xs text-[#0F172A] cursor-pointer sm:pt-5">
-              <input
-                type="checkbox"
-                checked={publicarAoCriar}
-                onChange={(e) => setPublicarAoCriar(e.target.checked)}
-                className="h-4 w-4 rounded border-[#CBD5E1] text-[#1E6BFF]"
-              />
-              Publicar agora e gerar as vagas
-            </label>
-          </div>
-
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
-            <PillButton
-              variant="ghost"
-              hideIconCircle
-              onClick={() => setModalAgenda(false)}
-              className="w-full sm:w-auto"
-            >
-              Cancelar
-            </PillButton>
-            <PillButton
-              type="submit"
-              loading={criandoAgenda}
-              className="w-full sm:w-auto"
-            >
-              Criar agenda
-            </PillButton>
-          </div>
-        </form>
-      </Modal>
+        unidadeId={unidadeId}
+        perfil={perfil}
+        servicos={servicos}
+        profissionais={profissionais}
+        onSuccess={async () => {
+          await carregarAgendas();
+          setRefreshGradeTrigger((v) => v + 1);
+        }}
+      />
 
       {/* Modal de cancelamento de agendamento */}
       <Modal

@@ -20,6 +20,10 @@ import {
   ValidationError,
   VagaAgenda,
 } from '../index';
+import {
+  extrairDataIsoMaceio,
+  obterTurnoMaceio,
+} from '../../application/utils/dataMaceio';
 
 const ENDERECO_VALIDO = {
   cep: '57050-000',
@@ -345,6 +349,7 @@ describe('Hierarquia Usuario, Paciente e Profissional', () => {
     });
 
     assert.equal(medico.obterPerfilAcesso(), 'PROFISSIONAL_SAUDE');
+    assert.equal(medico.obterRegistroConselhoFormatado(), 'CRM 12345/AL');
     assert.equal(medico.estaVinculadoAUnidade('uni-1'), true);
     assert.equal(medico.estaVinculadoAUnidade('uni-2'), false);
     assert.equal(medico.podeGerenciarAgenda(), true);
@@ -547,5 +552,12 @@ describe('Estratégias Polimórficas de Chamada na Fila', () => {
 
     assert.equal(estrategia.selecionarProximaEntrada(fila, 0)?.getId(), 'c1');
     assert.equal(estrategia.selecionarProximaEntrada([], 0), null);
+  });
+
+  it('deve classificar turnos e datas corretamente no fuso America/Maceio (-03:00)', () => {
+    assert.equal(obterTurnoMaceio(new Date('2026-11-24T11:30:00-03:00')), 'MANHA');
+    assert.equal(obterTurnoMaceio(new Date('2026-11-24T14:00:00-03:00')), 'TARDE');
+    assert.equal(obterTurnoMaceio(new Date('2026-11-24T19:00:00-03:00')), 'NOITE');
+    assert.equal(extrairDataIsoMaceio(new Date('2026-11-24T23:30:00-03:00')), '2026-11-24');
   });
 });

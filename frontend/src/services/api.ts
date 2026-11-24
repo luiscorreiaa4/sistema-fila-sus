@@ -9,6 +9,7 @@ import type {
   CadastrarPacienteInput,
   CadastrarProfissionalInput,
   CadastrarServicoInput,
+  CatalogoBuscaVagasResponse,
   CategoriaServico,
   ChamadaFilaDTO,
   ChamadaPainelPublicoDTO,
@@ -18,6 +19,7 @@ import type {
   CriarUnidadeInput,
   EntradaFilaDTO,
   EntradaFilaOperacionalDTO,
+  GradeAgendaResponse,
   HealthResponse,
   LoginInput,
   LoginResponse,
@@ -31,6 +33,7 @@ import type {
   StatusCadastro,
   StatusServico,
   StatusUnidade,
+  TurnoAtendimento,
   UnidadeSaudeDTO,
   VagaDisponivelDTO,
 } from '../types/api';
@@ -259,12 +262,29 @@ export const agendasApi = {
   listarDisponiveis: (params?: {
     unidadeId?: string;
     servicoId?: string;
+    especialidade?: string;
+    categoria?: CategoriaServico;
+    profissionalId?: string;
+    buscaProfissional?: string;
+    termo?: string;
+    turno?: TurnoAtendimento;
+    data?: string;
     dataInicio?: string;
     dataFim?: string;
   }) =>
     request<{ vagas: VagaDisponivelDTO[] }>(
       `/agendas/disponiveis${buildQuery(params)}`
     ),
+  catalogoBusca: () =>
+    request<CatalogoBuscaVagasResponse>('/agendas/catalogo-busca', { auth: false }),
+  consultarGrade: (params: {
+    unidadeId: string;
+    profissionalId?: string;
+    incluirSemProfissional?: boolean;
+    servicoId?: string;
+    dataInicio: string;
+    dataFim: string;
+  }) => request<GradeAgendaResponse>(`/agendas/grade${buildQuery(params)}`),
   listar: (params?: {
     unidadeId?: string;
     servicoId?: string;
