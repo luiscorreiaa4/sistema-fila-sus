@@ -1,144 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Building2,
   CalendarClock,
+  CheckCircle2,
   HeartHandshake,
-  MapPin,
   Monitor,
-  Phone,
   ShieldCheck,
   Sparkles,
-  Stethoscope,
-  Syringe,
-  Scissors,
-  Clock,
+  UserPlus,
 } from 'lucide-react';
-import { getHomeRouteByPerfil, useAuth } from '../contexts/AuthContext';
-import { agendasApi, servicosApi, unidadesApi } from '../services/api';
-import type {
-  CategoriaServico,
-  ServicoDTO,
-  UnidadeSaudeDTO,
-  VagaDisponivelDTO,
-} from '../types/api';
-import {
-  LABELS_CATEGORIA_SERVICO,
-  LABELS_MODO_ACESSO,
-  formatarDataCurta,
-  formatarHora,
-} from '../utils/formatters';
 import { BrandVisualPanel } from '../components/layout/BrandVisualPanel';
 import { Navbar } from '../components/layout/Navbar';
-import { EmptyState } from '../components/ui/EmptyState';
-import { NumberedCard } from '../components/ui/NumberedCard';
 import { PillButton } from '../components/ui/PillButton';
-import { CardSkeleton, Skeleton } from '../components/ui/Skeleton';
-import { StatusBadge } from '../components/ui/StatusBadge';
-
-function iconeCategoria(categoria: CategoriaServico) {
-  switch (categoria) {
-    case 'CONSULTA':
-      return <Stethoscope className="h-5 w-5" />;
-    case 'PROCEDIMENTO':
-      return <Syringe className="h-5 w-5" />;
-    case 'CIRURGIA':
-      return <Scissors className="h-5 w-5" />;
-  }
-}
 
 export function LandingPage() {
-  const { isAuthenticated, perfil } = useAuth();
-
-  const [unidades, setUnidades] = useState<UnidadeSaudeDTO[]>([]);
-  const [servicos, setServicos] = useState<ServicoDTO[]>([]);
-  const [vagas, setVagas] = useState<VagaDisponivelDTO[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [erroCarga, setErroCarga] = useState<string | null>(null);
-
-  const [categoriaFiltro, setCategoriaFiltro] = useState<
-    CategoriaServico | 'TODAS'
-  >('TODAS');
-  const [unidadeFiltro, setUnidadeFiltro] = useState<string>('TODAS');
-  const [servicoFiltro, setServicoFiltro] = useState<string>('TODOS');
-
-  useEffect(() => {
-    let ativo = true;
-    const carregar = async () => {
-      setLoading(true);
-      setErroCarga(null);
-      try {
-        const [resUnidades, resServicos, resVagas] = await Promise.all([
-          unidadesApi.listar({ status: 'ATIVA' }),
-          servicosApi.listar(),
-          agendasApi.listarDisponiveis(),
-        ]);
-        if (!ativo) return;
-        setUnidades(resUnidades.unidades);
-        setServicos(resServicos.servicos);
-        setVagas(resVagas.vagas);
-      } catch {
-        if (ativo) {
-          setErroCarga(
-            'Não foi possível carregar os dados em tempo real da rede SUS. Verifique se o back-end está em execução na porta 3333.'
-          );
-        }
-      } finally {
-        if (ativo) setLoading(false);
-      }
-    };
-    void carregar();
-    return () => {
-      ativo = false;
-    };
-  }, []);
-
-  const servicosFiltrados = useMemo(() => {
-    if (categoriaFiltro === 'TODAS') return servicos;
-    return servicos.filter((s) => s.categoria === categoriaFiltro);
-  }, [servicos, categoriaFiltro]);
-
-  const vagasFiltradas = useMemo(() => {
-    return vagas.filter((v) => {
-      if (unidadeFiltro !== 'TODAS' && v.unidadeId !== unidadeFiltro) {
-        return false;
-      }
-      if (servicoFiltro !== 'TODOS' && v.servicoId !== servicoFiltro) {
-        return false;
-      }
-      return true;
-    });
-  }, [vagas, unidadeFiltro, servicoFiltro]);
-
-  const totalVagasAbertas = useMemo(
-    () => vagas.reduce((acc, item) => acc + item.vagasDisponiveis, 0),
-    [vagas]
-  );
-
-  const destinoAgendar =
-    isAuthenticated && perfil === 'PACIENTE'
-      ? '/paciente?aba=agendar'
-      : isAuthenticated && perfil
-        ? getHomeRouteByPerfil(perfil)
-        : '/login';
-
-  const destinoPortal =
-    isAuthenticated && perfil ? getHomeRouteByPerfil(perfil) : '/login';
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col">
       <Navbar variant="landing" />
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-20 space-y-20">
-        {erroCarga && (
-          <div className="rounded-[20px] border border-amber-200 bg-amber-50 px-5 py-3.5 text-sm text-amber-800">
-            {erroCarga}
-          </div>
-        )}
-
-        {/* ================================================================
-            HERO SPLIT-SCREEN ASSIMÉTRICO
-        ================================================================ */}
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-16 space-y-14">
+        {/* Hero */}
         <section className="rounded-[32px] bg-white border border-[#E2E8F0] p-6 sm:p-10 lg:p-12 shadow-soft">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
             {/* Esquerda */}
@@ -146,79 +26,66 @@ export function LandingPage() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-[#EFF4FB] border border-[#DBEAFE] px-3.5 py-1.5 text-xs font-medium text-[#1E6BFF]">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Transparência Pública · SUS Maceió
+                  Transparência nas Filas do SUS · Maceió
                 </div>
 
-                <h1 className="hero-title mt-6 text-4xl sm:text-5xl lg:text-[56px] text-[#0F172A]">
-                  Atendimento SUS com{' '}
-                  <span className="text-[#1E6BFF]">Clareza</span> e Agilidade.
+                <h1 className="hero-title mt-6 text-4xl sm:text-5xl lg:text-[54px] text-[#0F172A]">
+                  Atendimento público com{' '}
+                  <span className="text-[#1E6BFF]">previsibilidade e respeito</span>.
                 </h1>
 
                 <p className="mt-5 max-w-xl text-base text-[#64748B] leading-relaxed">
-                  Agende consultas e procedimentos, acompanhe sua posição exata na
-                  fila presencial do dia e visualize chamadas em tempo real com
-                  privacidade garantida pela LGPD.
+                  Agende consultas e exames pelo celular, acompanhe sua posição
+                  na fila presencial em tempo real e confira o painel de
+                  chamadas sem expor seus dados pessoais.
                 </p>
 
                 <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                  <PillButton to={destinoAgendar} size="lg" variant="primary">
-                    Agendar Atendimento
+                  <PillButton to="/cadastro" size="lg" variant="primary">
+                    Criar conta gratuita
                   </PillButton>
                   <PillButton
-                    to={destinoPortal}
+                    to="/login"
                     size="lg"
                     variant="secondary"
                     hideIconCircle
                   >
-                    {isAuthenticated ? 'Ir para Meu Portal' : 'Entrar no Portal'}
+                    Entrar no Portal
                   </PillButton>
                   <Link
-                    to="/cadastro"
-                    className="px-3 py-2 text-sm font-medium text-[#64748B] hover:text-[#1E6BFF] transition-colors"
+                    to="/painel"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[#64748B] hover:text-[#1E6BFF] transition-colors"
                   >
-                    Criar conta cidadão →
+                    <Monitor className="h-4 w-4" />
+                    Abrir Painel Público →
                   </Link>
                 </div>
               </div>
 
-              {/* Strip de 3 KPIs Reais */}
-              <div className="mt-10 pt-8 border-t border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  {loading ? (
-                    <Skeleton className="h-10 w-20" />
-                  ) : (
-                    <p className="kpi-number text-4xl sm:text-[42px] text-[#0F172A]">
-                      {String(unidades.length).padStart(2, '0')}
-                    </p>
-                  )}
-                  <p className="mt-2 text-xs text-[#64748B] leading-relaxed">
-                    Unidades de saúde ativas integradas ao painel público
+              {/* Strip compacta de diferenciais */}
+              <div className="mt-10 pt-7 border-t border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="space-y-1">
+                  <p className="font-display text-lg font-semibold text-[#0F172A]">
+                    100% gratuito
+                  </p>
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    Acesso aberto ao cidadão com CPF e Cartão Nacional de Saúde.
                   </p>
                 </div>
-
-                <div>
-                  {loading ? (
-                    <Skeleton className="h-10 w-20" />
-                  ) : (
-                    <p className="kpi-number text-4xl sm:text-[42px] text-[#0F172A]">
-                      {String(servicos.length).padStart(2, '0')}
-                    </p>
-                  )}
-                  <p className="mt-2 text-xs text-[#64748B] leading-relaxed">
-                    Serviços e especialidades habilitados para marcação
+                <div className="space-y-1">
+                  <p className="font-display text-lg font-semibold text-[#0F172A]">
+                    Privacidade LGPD
+                  </p>
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    Os painéis de TV exibem apenas senha, sala e horário.
                   </p>
                 </div>
-
-                <div>
-                  {loading ? (
-                    <Skeleton className="h-10 w-24" />
-                  ) : (
-                    <p className="kpi-number text-4xl sm:text-[42px] text-[#1E6BFF]">
-                      {totalVagasAbertas}
-                    </p>
-                  )}
-                  <p className="mt-2 text-xs text-[#64748B] leading-relaxed">
-                    Vagas abertas em {vagas.length} horários publicados agora
+                <div className="space-y-1">
+                  <p className="font-display text-lg font-semibold text-[#1E6BFF]">
+                    Prioridade legal
+                  </p>
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    Idosos 60+ e PcD identificados automaticamente no check-in.
                   </p>
                 </div>
               </div>
@@ -228,23 +95,23 @@ export function LandingPage() {
             <div className="lg:col-span-5 flex">
               <BrandVisualPanel
                 className="w-full"
-                headline="Interface mínima. Clareza máxima para o cidadão."
-                description="Prioridade legal calculada automaticamente no check-in, rodízio transparente e painel público sem exposição de dados sensíveis."
+                headline="Informações claras para o cidadão."
+                description="A prioridade legal é calculada automaticamente no check-in. O painel público não mostra dados pessoais."
                 badges={[
                   {
                     icon: <ShieldCheck className="h-4 w-4" />,
-                    title: 'Transparência LGPD',
-                    subtitle: 'Painel exibe apenas senha, guichê e horário',
+                    title: 'Painel público',
+                    subtitle: 'Mostra apenas senha, guichê e horário',
                   },
                   {
                     icon: <CalendarClock className="h-4 w-4" />,
-                    title: 'Fila em Tempo Real',
-                    subtitle: 'Posição exata e pessoas à frente no celular',
+                    title: 'Fila em tempo real',
+                    subtitle: 'Sua posição e quantas pessoas estão à frente, pelo celular',
                   },
                   {
                     icon: <HeartHandshake className="h-4 w-4" />,
-                    title: 'Atendimento Humanizado',
-                    subtitle: 'Triagem prioritária para idosos 60+ e PcD',
+                    title: 'Prioridade legal',
+                    subtitle: 'Idosos 60+ e pessoas com deficiência',
                   },
                 ]}
               />
@@ -252,324 +119,174 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ================================================================
-            SEÇÃO DE SERVIÇOS EM BENTO GRID
-        ================================================================ */}
-        <section id="servicos" className="scroll-mt-24 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
-                Catálogo Assistencial
-              </span>
-              <h2 className="mt-2 font-display text-3xl sm:text-4xl font-normal tracking-tight text-[#0F172A]">
-                Serviços Disponíveis na Rede
+        {/* Como funciona */}
+        <section id="como-funciona" className="scroll-mt-24 space-y-6">
+          <div className="max-w-2xl">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
+              Simples do início ao fim
+            </span>
+            <h2 className="mt-2 font-display text-2xl sm:text-3xl font-normal tracking-tight text-[#0F172A]">
+              Como funciona o atendimento
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <article className="rounded-[24px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col justify-between gap-4">
+              <div className="flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF]">
+                  <UserPlus className="h-5 w-5" />
+                </span>
+                <span className="font-display text-xs font-semibold text-[#64748B]">
+                  01
+                </span>
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-medium text-[#0F172A]">
+                  Autocadastro rápido
+                </h3>
+                <p className="mt-1.5 text-xs text-[#64748B] leading-relaxed">
+                  Informe seu CPF, Cartão SUS e endereço com validação imediata
+                  para acessar o portal do cidadão.
+                </p>
+              </div>
+            </article>
+
+            <article className="rounded-[24px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col justify-between gap-4">
+              <div className="flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF]">
+                  <CheckCircle2 className="h-5 w-5" />
+                </span>
+                <span className="font-display text-xs font-semibold text-[#64748B]">
+                  02
+                </span>
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-medium text-[#0F172A]">
+                  Agendamento online
+                </h3>
+                <p className="mt-1.5 text-xs text-[#64748B] leading-relaxed">
+                  Escolha unidade, especialidade e horário disponível e receba
+                  seu protocolo de confirmação na hora.
+                </p>
+              </div>
+            </article>
+
+            <article className="rounded-[24px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col justify-between gap-4">
+              <div className="flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF]">
+                  <Monitor className="h-5 w-5" />
+                </span>
+                <span className="font-display text-xs font-semibold text-[#64748B]">
+                  03
+                </span>
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-medium text-[#0F172A]">
+                  Fila transparente
+                </h3>
+                <p className="mt-1.5 text-xs text-[#64748B] leading-relaxed">
+                  No dia da consulta, faça o check-in na recepção e acompanhe
+                  chamadas e guichês pelo painel público.
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        {/* Banner de destaque */}
+        <section
+          id="diferenciais"
+          className="scroll-mt-24 relative overflow-hidden rounded-[28px] bg-cobalt-gradient p-7 sm:p-10 text-white shadow-cobalt"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-20 -right-16 h-64 w-64 rounded-full bg-white/15 blur-3xl"
+          />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="max-w-xl">
+              <h2 className="font-display text-2xl sm:text-3xl font-normal tracking-tight">
+                Acompanhe as chamadas das recepções agora mesmo
               </h2>
-              <p className="mt-2 max-w-2xl text-sm text-[#64748B]">
-                Consulte especialidades ativas, modalidade de acesso e orientações
-                de preparo antes de confirmar seu horário.
+              <p className="mt-2 text-sm text-white/80 leading-relaxed">
+                O Painel Público pode ser consultado a qualquer momento, sem
+                precisar de login, exibindo apenas a senha, o guichê e o horário.
               </p>
             </div>
-
-            {/* Filtro por categoria */}
-            <div className="inline-flex flex-wrap items-center gap-1.5 rounded-full bg-white border border-[#E2E8F0] p-1.5 shadow-pill">
-              {(
-                [
-                  { id: 'TODAS', label: 'Todos' },
-                  { id: 'CONSULTA', label: 'Consultas' },
-                  { id: 'PROCEDIMENTO', label: 'Procedimentos' },
-                  { id: 'CIRURGIA', label: 'Cirurgias' },
-                ] as const
-              ).map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setCategoriaFiltro(cat.id)}
-                  className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                    categoriaFiltro === cat.id
-                      ? 'bg-[#1E6BFF] text-white'
-                      : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#EFF4FB]'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <PillButton to="/painel" variant="white" size="lg">
+                Ver Painel Público
+              </PillButton>
+              <Link
+                to="/cadastro"
+                className="inline-flex items-center rounded-full glass-on-cobalt px-5 py-3 text-xs font-semibold text-white hover:bg-white/25 transition-colors"
+              >
+                Criar conta
+              </Link>
             </div>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {servicosFiltrados.map((servico, idx) => (
-                <NumberedCard
-                  key={servico.id}
-                  index={idx + 1}
-                  icon={iconeCategoria(servico.categoria)}
-                  title={servico.nome}
-                  description={
-                    servico.orientacoesPreparo ||
-                    `Especialidade ${servico.especialidade}. Comparecer com documento com foto e Cartão SUS.`
-                  }
-                  badge={
-                    <StatusBadge tone="info">
-                      {LABELS_CATEGORIA_SERVICO[servico.categoria]}
-                    </StatusBadge>
-                  }
-                  actionLabel="Agendar serviço"
-                  actionTo={
-                    isAuthenticated && perfil === 'PACIENTE'
-                      ? `/paciente?aba=agendar&servicoId=${servico.id}`
-                      : `/login`
-                  }
-                  rightMeta={
-                    <span className="inline-flex items-center gap-1 font-medium text-[#0F172A]">
-                      {servico.especialidade} · {LABELS_MODO_ACESSO[servico.modoAcesso]}
-                    </span>
-                  }
-                />
-              ))}
-
-              {/* Card Sólido em Gradiente Azul Cobalto (composição da referência) */}
-              <article className="relative overflow-hidden rounded-[20px] bg-cobalt-gradient p-6 text-white flex flex-col justify-between shadow-cobalt min-h-[240px]">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-white/15 blur-2xl"
-                />
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between">
-                    <span className="glass-on-cobalt rounded-full px-3 py-1 text-[11px] font-medium">
-                      Transparência Ativa
-                    </span>
-                    <Monitor className="h-5 w-5 text-white/80" />
-                  </div>
-                  <h3 className="mt-5 font-display text-xl font-medium leading-snug">
-                    Acompanhe as chamadas ao vivo nas recepções do SUS
-                  </h3>
-                  <p className="mt-2 text-sm text-white/80 leading-relaxed">
-                    Painel público atualizado continuamente exibindo senha de
-                    atendimento, guichê e sala sem expor dados pessoais.
-                  </p>
-                </div>
-
-                <div className="relative z-10 mt-6">
-                  <PillButton to="/painel" variant="white" size="md">
-                    Abrir Painel Público
-                  </PillButton>
-                </div>
-              </article>
-            </div>
-          )}
-        </section>
-
-        {/* ================================================================
-            UNIDADES DE SAÚDE & AGENDAS DISPONÍVEIS
-        ================================================================ */}
-        <section id="unidades" className="scroll-mt-24 space-y-8">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
-              Rede Assistencial
-            </span>
-            <h2 className="mt-2 font-display text-3xl sm:text-4xl font-normal tracking-tight text-[#0F172A]">
-              Unidades de Saúde Ativas
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-[#64748B]">
-              Selecione uma unidade para acompanhar o painel de chamadas ou
-              filtrar os horários disponíveis para agendamento.
-            </p>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <CardSkeleton />
-              <CardSkeleton />
-            </div>
-          ) : unidades.length === 0 ? (
-            <EmptyState
-              icon={<Building2 className="h-6 w-6" />}
-              title="Nenhuma unidade ativa encontrada"
-              description="As unidades cadastradas pelo administrador aparecerão aqui automaticamente."
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {unidades.map((u, idx) => (
-                <NumberedCard
-                  key={u.id}
-                  index={idx + 1}
-                  icon={<Building2 className="h-5 w-5" />}
-                  title={u.nome}
-                  badge={
-                    <StatusBadge tone="success" dot>
-                      Ativa
-                    </StatusBadge>
-                  }
-                  actionLabel="Ver Painel Público"
-                  actionTo={`/painel/${u.id}`}
-                  rightMeta={u.cnes ? `CNES ${u.cnes}` : u.endereco.municipio}
-                >
-                  <div className="space-y-2 text-xs text-[#64748B]">
-                    <p className="flex items-start gap-2">
-                      <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-[#1E6BFF]" />
-                      <span>
-                        {u.endereco.logradouro}, {u.endereco.numero} —{' '}
-                        {u.endereco.bairro}, {u.endereco.municipio}/{u.endereco.estado}
-                      </span>
-                    </p>
-                    {u.telefone && (
-                      <p className="flex items-center gap-2">
-                        <Phone className="h-3.5 w-3.5 shrink-0 text-[#1E6BFF]" />
-                        <span>{u.telefone}</span>
-                      </p>
-                    )}
-                  </div>
-                </NumberedCard>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Agendas / Vagas Disponíveis */}
-        <section id="agendas" className="scroll-mt-24 space-y-6">
-          <div className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 sm:p-8 shadow-soft space-y-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div>
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
-                  Agenda Pública Aberta
-                </span>
-                <h2 className="mt-1.5 font-display text-2xl sm:text-3xl font-normal tracking-tight text-[#0F172A]">
-                  Horários e Vagas Disponíveis
-                </h2>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <select
-                  aria-label="Filtrar vagas por unidade"
-                  value={unidadeFiltro}
-                  onChange={(e) => setUnidadeFiltro(e.target.value)}
-                  className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-xs font-medium text-[#0F172A] focus:border-[#1E6BFF] focus:outline-none"
-                >
-                  <option value="TODAS">Todas as unidades</option>
-                  {unidades.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.nome}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  aria-label="Filtrar vagas por serviço"
-                  value={servicoFiltro}
-                  onChange={(e) => setServicoFiltro(e.target.value)}
-                  className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-xs font-medium text-[#0F172A] focus:border-[#1E6BFF] focus:outline-none"
-                >
-                  <option value="TODOS">Todos os serviços</option>
-                  {servicos.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Skeleton className="h-32 rounded-[20px]" />
-                <Skeleton className="h-32 rounded-[20px]" />
-                <Skeleton className="h-32 rounded-[20px]" />
-              </div>
-            ) : vagasFiltradas.length === 0 ? (
-              <EmptyState
-                icon={<CalendarClock className="h-6 w-6" />}
-                title="Nenhuma vaga aberta para os filtros selecionados"
-                description="Altere os filtros de unidade/serviço ou aguarde a publicação de novas agendas pela equipe da unidade."
-                className="border-dashed bg-[#F8FAFC]"
-              />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {vagasFiltradas.slice(0, 9).map((vaga) => (
-                  <div
-                    key={vaga.id}
-                    className="rounded-[20px] border border-[#E2E8F0] bg-[#F8FAFC]/60 p-5 flex flex-col justify-between hover:bg-white hover:border-[#1E6BFF]/35 hover:shadow-soft transition-all"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <StatusBadge tone="info">
-                          {formatarDataCurta(vaga.dataHoraInicio)} ·{' '}
-                          {formatarHora(vaga.dataHoraInicio)}
-                        </StatusBadge>
-                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full px-2.5 py-0.5">
-                          {vaga.vagasDisponiveis}{' '}
-                          {vaga.vagasDisponiveis === 1 ? 'vaga' : 'vagas'}
-                        </span>
-                      </div>
-
-                      <h3 className="mt-3 font-display text-base font-medium text-[#0F172A]">
-                        {vaga.servicoNome}
-                      </h3>
-                      <p className="mt-1 text-xs text-[#64748B]">
-                        {vaga.unidadeNome}
-                      </p>
-                      {vaga.profissionalNome && (
-                        <p className="mt-1 text-xs text-[#64748B]">
-                          Profissional: {vaga.profissionalNome}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-[#E2E8F0]/70 flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-[#64748B]">
-                        <Clock className="h-3 w-3" />
-                        {vaga.especialidade}
-                      </span>
-                      <Link
-                        to={
-                          isAuthenticated && perfil === 'PACIENTE'
-                            ? `/paciente?aba=agendar&unidadeId=${vaga.unidadeId}&servicoId=${vaga.servicoId}`
-                            : '/login'
-                        }
-                        className="text-xs font-semibold text-[#1E6BFF] hover:text-[#1554D9]"
-                      >
-                        Agendar horário →
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {vagasFiltradas.length > 9 && (
-              <div className="flex justify-center pt-2">
-                <PillButton to={destinoAgendar} variant="secondary">
-                  Ver todos os {vagasFiltradas.length} horários no Portal
-                </PillButton>
-              </div>
-            )}
           </div>
         </section>
       </main>
 
       <footer className="border-t border-[#E2E8F0] bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B]">
-          <p>
-            <strong className="font-semibold text-[#0F172A]">
-              Sistema Fila SUS
-            </strong>{' '}
-            — Transparência de Filas Públicas · CESMAC
-          </p>
-          <div className="flex items-center gap-5">
-            <Link to="/painel" className="hover:text-[#1E6BFF]">
-              Painel Público LGPD
-            </Link>
-            <Link to="/cadastro" className="hover:text-[#1E6BFF]">
-              Autocadastro
-            </Link>
-            <Link to="/login" className="hover:text-[#1E6BFF]">
-              Acesso ao Portal
-            </Link>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-12 gap-8 text-xs text-[#64748B]">
+          <div className="md:col-span-5 space-y-2.5">
+            <div className="inline-flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cobalt-gradient text-white">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </span>
+              <span className="font-display text-sm font-semibold text-[#0F172A]">
+                Sistema Fila <span className="text-[#1E6BFF]">SUS</span>
+              </span>
+            </div>
+            <p className="max-w-sm leading-relaxed">
+              Plataforma acadêmica de transparência e gestão de filas públicas
+              de saúde — Projeto Integrador CESMAC.
+            </p>
+          </div>
+
+          <div className="md:col-span-3 space-y-2">
+            <p className="font-semibold text-[#0F172A]">Acesso rápido</p>
+            <ul className="space-y-1.5">
+              <li>
+                <Link to="/painel" className="hover:text-[#1E6BFF] transition-colors">
+                  Painel Público de Chamadas
+                </Link>
+              </li>
+              <li>
+                <Link to="/login" className="hover:text-[#1E6BFF] transition-colors">
+                  Entrar no Portal
+                </Link>
+              </li>
+              <li>
+                <Link to="/cadastro" className="hover:text-[#1E6BFF] transition-colors">
+                  Autocadastro de Cidadão
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-4 space-y-2">
+            <p className="font-semibold text-[#0F172A]">Compromisso LGPD</p>
+            <p className="leading-relaxed">
+              Nenhum dado pessoal (nome, CPF ou Cartão SUS) é exibido nos
+              painéis públicos de chamada.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-[#E2E8F0] bg-[#F8FAFC]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-[#64748B]">
+            <span>© 2026 Sistema Fila SUS · CESMAC</span>
+            <span>Transparência, acessibilidade e prioridade legal</span>
           </div>
         </div>
       </footer>

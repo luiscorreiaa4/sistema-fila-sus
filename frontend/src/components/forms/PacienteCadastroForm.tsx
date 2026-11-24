@@ -17,14 +17,77 @@ import {
   nullableTrim,
   somenteDigitos,
 } from '../../utils/formatters';
+import {
+  validarCns,
+  validarCpf,
+  validarEmail,
+  validarSenhaForte,
+} from '../../utils/validators';
 import { FormField, SelectInput, TextAreaInput, TextInput } from '../ui/FormControls';
 import { PillButton } from '../ui/PillButton';
 
 interface PacienteCadastroFormProps {
   mode: 'autocadastro' | 'assistido';
-  onSuccess: (paciente: PacienteDTO) => void;
+  onSuccess: (
+    paciente: PacienteDTO,
+    credenciais?: { cpf: string; senha: string }
+  ) => void | Promise<void>;
   onCancel?: () => void;
 }
+
+type CampoCadastro =
+  | 'nomeCompleto'
+  | 'dataNascimento'
+  | 'cpf'
+  | 'cns'
+  | 'email'
+  | 'celular'
+  | 'cep'
+  | 'logradouro'
+  | 'numero'
+  | 'bairro'
+  | 'municipio'
+  | 'estado'
+  | 'senha'
+  | 'confirmarSenha'
+  | 'cienciaPrivacidade';
+
+const CAMPO_TO_ELEMENT_ID: Record<string, string> = {
+  nomeCompleto: 'pac-nome',
+  nomeSocial: 'pac-nome-social',
+  dataNascimento: 'pac-nascimento',
+  cpf: 'pac-cpf',
+  cns: 'pac-cns',
+  email: 'pac-email',
+  celular: 'pac-celular',
+  cep: 'pac-cep',
+  logradouro: 'pac-logradouro',
+  numero: 'pac-numero',
+  bairro: 'pac-bairro',
+  municipio: 'pac-municipio',
+  estado: 'pac-uf',
+  senha: 'pac-senha',
+  confirmarSenha: 'pac-confirma-senha',
+  cienciaPrivacidade: 'pac-ciencia',
+};
+
+const ORDEM_CAMPOS: CampoCadastro[] = [
+  'nomeCompleto',
+  'dataNascimento',
+  'cpf',
+  'cns',
+  'email',
+  'celular',
+  'cep',
+  'logradouro',
+  'numero',
+  'bairro',
+  'municipio',
+  'estado',
+  'senha',
+  'confirmarSenha',
+  'cienciaPrivacidade',
+];
 
 const TIPOS_DEFICIENCIA: TipoDeficiencia[] = [
   'FISICA',
@@ -79,59 +142,228 @@ export function PacienteCadastroForm({
     );
   };
 
+  const obterErroCampo = (
+    campo: CampoCadastro,
+    valores?: Partial<{
+      nomeCompleto: string;
+      dataNascimento: string;
+      cpf: string;
+      cns: string;
+      email: string;
+      celular: string;
+      cep: string;
+      logradouro: string;
+      numero: string;
+      bairro: string;
+      municipio: string;
+      estado: string;
+      senha: string;
+      confirmarSenha: string;
+      cienciaPrivacidade: boolean;
+    }>
+  ): string | undefined => {
+    const vNome = valores?.nomeCompleto ?? nomeCompleto;
+    const vData = valores?.dataNascimento ?? dataNascimento;
+    const vCpf = valores?.cpf ?? cpf;
+    const vCns = valores?.cns ?? cns;
+    const vEmail = valores?.email ?? email;
+    const vCelular = valores?.celular ?? celular;
+    const vCep = valores?.cep ?? cep;
+    const vLogradouro = valores?.logradouro ?? logradouro;
+    const vNumero = valores?.numero ?? numero;
+    const vBairro = valores?.bairro ?? bairro;
+    const vMunicipio = valores?.municipio ?? municipio;
+    const vEstado = valores?.estado ?? estado;
+    const vSenha = valores?.senha ?? senha;
+    const vConfirmar = valores?.confirmarSenha ?? confirmarSenha;
+    const vCiencia = valores?.cienciaPrivacidade ?? cienciaPrivacidade;
+
+    switch (campo) {
+      case 'nomeCompleto':
+        if (vNome.trim().length < 3) {
+          return 'Informe o nome completo (mín. 3 caracteres)';
+        }
+        return undefined;
+      case 'dataNascimento': {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(vData)) {
+          return 'Informe uma data de nascimento válida';
+        }
+        const dt = new Date(`${vData}T00:00:00`);
+        if (Number.isNaN(dt.getTime()) || dt > new Date()) {
+          return 'Data de nascimento inválida ou futura';
+        }
+        return undefined;
+      }
+      case 'cpf': {
+        const dig = somenteDigitos(vCpf);
+        if (dig.length !== 11) {
+          return 'CPF deve conter 11 dígitos';
+        }
+        if (!validarCpf(dig)) {
+          return 'CPF inválido. Confira os dígitos informados';
+        }
+        return undefined;
+      }
+      case 'cns': {
+        const dig = somenteDigitos(vCns);
+        if (dig.length !== 15) {
+          return 'Cartão SUS (CNS) deve conter 15 dígitos';
+        }
+        if (!validarCns(dig)) {
+          return 'Número do Cartão SUS (CNS) inválido';
+        }
+        return undefined;
+      }
+      case 'email': {
+        const emailTrim = vEmail.trim();
+        const celDig = somenteDigitos(vCelular);
+        if (!emailTrim && !celDig) {
+          return 'Informe ao menos um contato: e-mail ou celular';
+        }
+        if (emailTrim && !validarEmail(emailTrim)) {
+          return 'Informe um endereço de e-mail válido';
+        }
+        return undefined;
+      }
+      case 'celular': {
+        const emailTrim = vEmail.trim();
+        const celDig = somenteDigitos(vCelular);
+        if (!emailTrim && !celDig) {
+          return 'Informe ao menos um contato: e-mail ou celular';
+        }
+        if (celDig && (celDig.length < 10 || celDig.length > 11)) {
+          return 'Celular deve conter DDD + número (10 ou 11 dígitos)';
+        }
+        return undefined;
+      }
+      case 'cep':
+        if (somenteDigitos(vCep).length !== 8) {
+          return 'CEP deve conter 8 dígitos';
+        }
+        return undefined;
+      case 'logradouro':
+        if (!vLogradouro.trim()) {
+          return 'Informe o logradouro';
+        }
+        return undefined;
+      case 'numero':
+        if (!vNumero.trim()) {
+          return 'Informe o número';
+        }
+        return undefined;
+      case 'bairro':
+        if (!vBairro.trim()) {
+          return 'Informe o bairro';
+        }
+        return undefined;
+      case 'municipio':
+        if (!vMunicipio.trim()) {
+          return 'Informe o município';
+        }
+        return undefined;
+      case 'estado':
+        if (vEstado.trim().length !== 2) {
+          return 'UF inválida';
+        }
+        return undefined;
+      case 'senha':
+        return validarSenhaForte(vSenha, vCpf, vData) ?? undefined;
+      case 'confirmarSenha':
+        if (!vConfirmar) {
+          return 'Confirme sua senha';
+        }
+        if (vSenha !== vConfirmar) {
+          return 'As senhas não coincidem';
+        }
+        return undefined;
+      case 'cienciaPrivacidade':
+        if (!vCiencia) {
+          return 'O aceite do termo de privacidade é obrigatório';
+        }
+        return undefined;
+    }
+  };
+
+  const focarPrimeiroErro = (mapaErros: Record<string, string>) => {
+    const primeiroCampo =
+      ORDEM_CAMPOS.find((c) => Boolean(mapaErros[c])) ??
+      Object.keys(mapaErros)[0];
+    if (!primeiroCampo) return;
+    const elementId = CAMPO_TO_ELEMENT_ID[primeiroCampo];
+    if (!elementId) return;
+    window.requestAnimationFrame(() => {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus({ preventScroll: true });
+      }
+    });
+  };
+
+  const validarCampo = (
+    campo: CampoCadastro,
+    valores?: Partial<{
+      nomeCompleto: string;
+      dataNascimento: string;
+      cpf: string;
+      cns: string;
+      email: string;
+      celular: string;
+      cep: string;
+      logradouro: string;
+      numero: string;
+      bairro: string;
+      municipio: string;
+      estado: string;
+      senha: string;
+      confirmarSenha: string;
+      cienciaPrivacidade: boolean;
+    }>
+  ) => {
+    const msg = obterErroCampo(campo, valores);
+    setErrosCampos((prev) => {
+      const next = { ...prev };
+      if (msg) {
+        next[campo] = msg;
+      } else {
+        delete next[campo];
+      }
+
+      if (campo === 'email' || campo === 'celular') {
+        const outro: CampoCadastro = campo === 'email' ? 'celular' : 'email';
+        const msgOutro = obterErroCampo(outro, valores);
+        if (!msgOutro) {
+          delete next[outro];
+        }
+      }
+
+      if (campo === 'senha' && (valores?.confirmarSenha ?? confirmarSenha)) {
+        const msgConf = obterErroCampo('confirmarSenha', valores);
+        if (msgConf) {
+          next.confirmarSenha = msgConf;
+        } else {
+          delete next.confirmarSenha;
+        }
+      }
+
+      return next;
+    });
+  };
+
   const validarLocal = (): boolean => {
     const novosErros: Record<string, string> = {};
 
-    if (nomeCompleto.trim().length < 3) {
-      novosErros.nomeCompleto = 'Informe o nome completo (mín. 3 caracteres)';
-    }
-    if (somenteDigitos(cpf).length !== 11) {
-      novosErros.cpf = 'CPF deve conter 11 dígitos';
-    }
-    if (somenteDigitos(cns).length !== 15) {
-      novosErros.cns = 'Cartão SUS (CNS) deve conter 15 dígitos';
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
-      novosErros.dataNascimento = 'Informe uma data de nascimento válida';
-    }
-    if (!email.trim() && !celular.trim()) {
-      novosErros.email = 'Informe ao menos um contato: e-mail ou celular';
-      novosErros.celular = 'Informe ao menos um contato: e-mail ou celular';
-    }
-    if (somenteDigitos(cep).length !== 8) {
-      novosErros.cep = 'CEP deve conter 8 dígitos';
-    }
-    if (!logradouro.trim()) {
-      novosErros.logradouro = 'Informe o logradouro';
-    }
-    if (!numero.trim()) {
-      novosErros.numero = 'Informe o número';
-    }
-    if (!bairro.trim()) {
-      novosErros.bairro = 'Informe o bairro';
-    }
-    if (!municipio.trim()) {
-      novosErros.municipio = 'Informe o município';
-    }
-    if (estado.trim().length !== 2) {
-      novosErros.estado = 'UF inválida';
-    }
-    if (senha.length < 8 || senha.length > 64) {
-      novosErros.senha = 'A senha deve ter entre 8 e 64 caracteres';
-    } else if (!/[a-zA-Z]/.test(senha) || !/[0-9]/.test(senha)) {
-      novosErros.senha = 'A senha deve conter letras e números';
-    }
-    if (senha !== confirmarSenha) {
-      novosErros.confirmarSenha = 'As senhas não coincidem';
-    }
-    if (!cienciaPrivacidade) {
-      novosErros.cienciaPrivacidade =
-        'O aceite do termo de ciência de privacidade (LGPD) é obrigatório';
+    for (const campo of ORDEM_CAMPOS) {
+      const msg = obterErroCampo(campo);
+      if (msg) {
+        novosErros[campo] = msg;
+      }
     }
 
     setErrosCampos(novosErros);
     if (Object.keys(novosErros).length > 0) {
       setErroGeral('Revise os campos destacados antes de concluir o cadastro.');
+      focarPrimeiroErro(novosErros);
       return false;
     }
     return true;
@@ -140,7 +372,6 @@ export function PacienteCadastroForm({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErroGeral(null);
-    setErrosCampos({});
 
     if (!validarLocal()) return;
 
@@ -173,7 +404,12 @@ export function PacienteCadastroForm({
         mode === 'autocadastro'
           ? await pacientesApi.autocadastro(payload)
           : await pacientesApi.cadastroAssistido(payload);
-      onSuccess(res.paciente);
+      await onSuccess(
+        res.paciente,
+        mode === 'autocadastro'
+          ? { cpf: payload.cpf, senha: payload.senha }
+          : undefined
+      );
     } catch (erro) {
       if (erro instanceof ApiError && erro.detalhes?.length) {
         const mapa: Record<string, string> = {};
@@ -183,6 +419,7 @@ export function PacienteCadastroForm({
           }
         }
         setErrosCampos(mapa);
+        focarPrimeiroErro(mapa);
       }
       setErroGeral(extrairMensagemErro(erro));
     } finally {
@@ -208,7 +445,7 @@ export function PacienteCadastroForm({
             1
           </span>
           <h3 className="font-display text-sm font-semibold text-[#0F172A]">
-            Identificação Civil e Cartão SUS
+            Identificação e Cartão SUS
           </h3>
         </div>
 
@@ -223,7 +460,12 @@ export function PacienteCadastroForm({
             <TextInput
               id="pac-nome"
               value={nomeCompleto}
-              onChange={(e) => setNomeCompleto(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setNomeCompleto(v);
+                if (errosCampos.nomeCompleto) validarCampo('nomeCompleto', { nomeCompleto: v });
+              }}
+              onBlur={() => validarCampo('nomeCompleto')}
               placeholder="Ex.: Maria da Silva"
               hasError={Boolean(errosCampos.nomeCompleto)}
             />
@@ -232,7 +474,7 @@ export function PacienteCadastroForm({
           <FormField
             label="Nome social (opcional)"
             htmlFor="pac-nome-social"
-            hint="Utilizado nas telas autenticadas e chamadas internas quando informado."
+            hint="Usado nas telas do sistema e nas chamadas, se informado."
             error={errosCampos.nomeSocial}
           >
             <TextInput
@@ -254,7 +496,12 @@ export function PacienteCadastroForm({
               id="pac-nascimento"
               type="date"
               value={dataNascimento}
-              onChange={(e) => setDataNascimento(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setDataNascimento(v);
+                if (errosCampos.dataNascimento) validarCampo('dataNascimento', { dataNascimento: v });
+              }}
+              onBlur={() => validarCampo('dataNascimento')}
               hasError={Boolean(errosCampos.dataNascimento)}
             />
           </FormField>
@@ -264,7 +511,12 @@ export function PacienteCadastroForm({
               id="pac-cpf"
               inputMode="numeric"
               value={cpf}
-              onChange={(e) => setCpf(maskCpf(e.target.value))}
+              onChange={(e) => {
+                const v = maskCpf(e.target.value);
+                setCpf(v);
+                if (errosCampos.cpf) validarCampo('cpf', { cpf: v });
+              }}
+              onBlur={() => validarCampo('cpf')}
               placeholder="000.000.000-00"
               hasError={Boolean(errosCampos.cpf)}
             />
@@ -281,7 +533,12 @@ export function PacienteCadastroForm({
               id="pac-cns"
               inputMode="numeric"
               value={cns}
-              onChange={(e) => setCns(maskCns(e.target.value))}
+              onChange={(e) => {
+                const v = maskCns(e.target.value);
+                setCns(v);
+                if (errosCampos.cns) validarCampo('cns', { cns: v });
+              }}
+              onBlur={() => validarCampo('cns')}
               placeholder="000 0000 0000 0000"
               hasError={Boolean(errosCampos.cns)}
             />
@@ -296,7 +553,7 @@ export function PacienteCadastroForm({
             2
           </span>
           <h3 className="font-display text-sm font-semibold text-[#0F172A]">
-            Contato (E-mail ou Celular obrigatório)
+            Contato (e-mail ou celular obrigatório)
           </h3>
         </div>
 
@@ -306,7 +563,14 @@ export function PacienteCadastroForm({
               id="pac-email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setEmail(v);
+                if (errosCampos.email || errosCampos.celular) {
+                  validarCampo('email', { email: v });
+                }
+              }}
+              onBlur={() => validarCampo('email')}
               placeholder="cidadao@email.com"
               hasError={Boolean(errosCampos.email)}
             />
@@ -317,7 +581,14 @@ export function PacienteCadastroForm({
               id="pac-celular"
               inputMode="tel"
               value={celular}
-              onChange={(e) => setCelular(maskTelefone(e.target.value))}
+              onChange={(e) => {
+                const v = maskTelefone(e.target.value);
+                setCelular(v);
+                if (errosCampos.celular || errosCampos.email) {
+                  validarCampo('celular', { celular: v });
+                }
+              }}
+              onBlur={() => validarCampo('celular')}
               placeholder="(82) 99999-9999"
               hasError={Boolean(errosCampos.celular)}
             />
@@ -342,7 +613,7 @@ export function PacienteCadastroForm({
             3
           </span>
           <h3 className="font-display text-sm font-semibold text-[#0F172A]">
-            Acessibilidade &amp; Prioridade Legal
+            Acessibilidade e prioridade legal
           </h3>
         </div>
 
@@ -405,7 +676,7 @@ export function PacienteCadastroForm({
             4
           </span>
           <h3 className="font-display text-sm font-semibold text-[#0F172A]">
-            Endereço Residencial
+            Endereço residencial
           </h3>
         </div>
 
@@ -421,7 +692,12 @@ export function PacienteCadastroForm({
               id="pac-cep"
               inputMode="numeric"
               value={cep}
-              onChange={(e) => setCep(maskCep(e.target.value))}
+              onChange={(e) => {
+                const v = maskCep(e.target.value);
+                setCep(v);
+                if (errosCampos.cep) validarCampo('cep', { cep: v });
+              }}
+              onBlur={() => validarCampo('cep')}
               placeholder="57020-050"
               hasError={Boolean(errosCampos.cep)}
             />
@@ -437,7 +713,12 @@ export function PacienteCadastroForm({
             <TextInput
               id="pac-logradouro"
               value={logradouro}
-              onChange={(e) => setLogradouro(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setLogradouro(v);
+                if (errosCampos.logradouro) validarCampo('logradouro', { logradouro: v });
+              }}
+              onBlur={() => validarCampo('logradouro')}
               placeholder="Rua, Avenida ou Travessa"
               hasError={Boolean(errosCampos.logradouro)}
             />
@@ -453,7 +734,12 @@ export function PacienteCadastroForm({
             <TextInput
               id="pac-numero"
               value={numero}
-              onChange={(e) => setNumero(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setNumero(v);
+                if (errosCampos.numero) validarCampo('numero', { numero: v });
+              }}
+              onBlur={() => validarCampo('numero')}
               placeholder="120"
               hasError={Boolean(errosCampos.numero)}
             />
@@ -482,7 +768,12 @@ export function PacienteCadastroForm({
             <TextInput
               id="pac-bairro"
               value={bairro}
-              onChange={(e) => setBairro(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setBairro(v);
+                if (errosCampos.bairro) validarCampo('bairro', { bairro: v });
+              }}
+              onBlur={() => validarCampo('bairro')}
               placeholder="Centro"
               hasError={Boolean(errosCampos.bairro)}
             />
@@ -498,7 +789,12 @@ export function PacienteCadastroForm({
             <TextInput
               id="pac-municipio"
               value={municipio}
-              onChange={(e) => setMunicipio(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setMunicipio(v);
+                if (errosCampos.municipio) validarCampo('municipio', { municipio: v });
+              }}
+              onBlur={() => validarCampo('municipio')}
               placeholder="Maceió"
               hasError={Boolean(errosCampos.municipio)}
             />
@@ -514,7 +810,12 @@ export function PacienteCadastroForm({
             <SelectInput
               id="pac-uf"
               value={estado}
-              onChange={(e) => setEstado(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setEstado(v);
+                if (errosCampos.estado) validarCampo('estado', { estado: v });
+              }}
+              onBlur={() => validarCampo('estado')}
               hasError={Boolean(errosCampos.estado)}
             >
               {UFS_BRASIL.map((uf) => (
@@ -527,14 +828,14 @@ export function PacienteCadastroForm({
         </div>
       </section>
 
-      {/* Credenciais & LGPD */}
+      {/* Senha e termo de privacidade */}
       <section className="space-y-4 pt-2 border-t border-[#E2E8F0]">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#EFF4FB] text-xs font-semibold text-[#1E6BFF]">
             5
           </span>
           <h3 className="font-display text-sm font-semibold text-[#0F172A]">
-            Senha de Acesso e Privacidade (LGPD)
+            Senha e termo de privacidade
           </h3>
         </div>
 
@@ -551,7 +852,14 @@ export function PacienteCadastroForm({
                 id="pac-senha"
                 type={mostrarSenha ? 'text' : 'password'}
                 value={senha}
-                onChange={(e) => setSenha(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSenha(v);
+                  if (errosCampos.senha || errosCampos.confirmarSenha) {
+                    validarCampo('senha', { senha: v });
+                  }
+                }}
+                onBlur={() => validarCampo('senha')}
                 placeholder="Crie uma senha forte"
                 hasError={Boolean(errosCampos.senha)}
                 className="pr-11"
@@ -581,7 +889,14 @@ export function PacienteCadastroForm({
               id="pac-confirma-senha"
               type={mostrarSenha ? 'text' : 'password'}
               value={confirmarSenha}
-              onChange={(e) => setConfirmarSenha(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setConfirmarSenha(v);
+                if (errosCampos.confirmarSenha) {
+                  validarCampo('confirmarSenha', { confirmarSenha: v });
+                }
+              }}
+              onBlur={() => validarCampo('confirmarSenha')}
               placeholder="Repita a senha"
               hasError={Boolean(errosCampos.confirmarSenha)}
             />
@@ -591,21 +906,27 @@ export function PacienteCadastroForm({
         <div
           className={`rounded-2xl border p-4 ${
             errosCampos.cienciaPrivacidade
-              ? 'border-red-300 bg-red-50/70'
+              ? 'border-red-400 bg-red-50/70'
               : 'border-[#DBEAFE] bg-[#EFF4FB]/60'
           }`}
         >
           <label className="flex items-start gap-3 cursor-pointer">
             <input
+              id="pac-ciencia"
               type="checkbox"
               checked={cienciaPrivacidade}
-              onChange={(e) => setCienciaPrivacidade(e.target.checked)}
+              onChange={(e) => {
+                const v = e.target.checked;
+                setCienciaPrivacidade(v);
+                validarCampo('cienciaPrivacidade', { cienciaPrivacidade: v });
+              }}
+              onBlur={() => validarCampo('cienciaPrivacidade')}
               className="mt-1 h-4 w-4 rounded border-[#CBD5E1] text-[#1E6BFF] focus:ring-[#1E6BFF]"
             />
             <span className="text-xs text-[#0F172A] leading-relaxed">
               <span className="inline-flex items-center gap-1 font-semibold text-[#1E6BFF] mr-1">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Termo de Privacidade (LGPD):
+                Termo de privacidade:
               </span>
               Estou ciente do tratamento dos meus dados pessoais e do Cartão SUS
               exclusivamente para agendamentos, triagem de prioridade legal e
@@ -628,7 +949,7 @@ export function PacienteCadastroForm({
           </PillButton>
         )}
         <PillButton type="submit" loading={isSubmitting} size="lg">
-          {mode === 'autocadastro' ? 'Concluir Autocadastro' : 'Salvar Cadastro Assistido'}
+          {mode === 'autocadastro' ? 'Concluir autocadastro' : 'Salvar cadastro assistido'}
         </PillButton>
       </div>
     </form>

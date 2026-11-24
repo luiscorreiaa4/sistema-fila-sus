@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -11,7 +11,6 @@ import {
   X,
 } from 'lucide-react';
 import { getHomeRouteByPerfil, useAuth } from '../../contexts/AuthContext';
-import { healthApi } from '../../services/api';
 import { LABELS_NIVEL_ACESSO } from '../../utils/formatters';
 import { PillButton } from '../ui/PillButton';
 
@@ -24,34 +23,8 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>(
-    'checking'
-  );
-  const [apiService, setApiService] = useState<string>('sistema-fila-sus-api');
-  const [showHealthPopover, setShowHealthPopover] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    let ativo = true;
-    const verificar = async () => {
-      try {
-        const res = await healthApi.check();
-        if (ativo) {
-          setApiStatus(res.status === 'ok' ? 'online' : 'offline');
-          if (res.servico) setApiService(res.servico);
-        }
-      } catch {
-        if (ativo) setApiStatus('offline');
-      }
-    };
-    void verificar();
-    const timer = window.setInterval(verificar, 30000);
-    return () => {
-      ativo = false;
-      window.clearInterval(timer);
-    };
-  }, []);
 
   const homeRoute = perfil ? getHomeRouteByPerfil(perfil) : '/login';
   const perfilLabel =
@@ -64,21 +37,23 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
   const navLinks =
     variant === 'landing'
       ? [
-          { label: 'Unidades', href: '/#unidades', isRoute: false },
-          { label: 'Serviços', href: '/#servicos', isRoute: false },
-          { label: 'Agendas Disponíveis', href: '/#agendas', isRoute: false },
+          { label: 'Como funciona', href: '/#como-funciona', isRoute: false },
+          { label: 'Diferenciais', href: '/#diferenciais', isRoute: false },
           { label: 'Painel Público', href: '/painel', isRoute: true },
         ]
-      : [
-          { label: 'Início', href: '/', isRoute: true },
-          { label: 'Painel Público', href: '/painel', isRoute: true },
-          ...(isAuthenticated && perfil
-            ? [{ label: 'Meu Portal', href: homeRoute, isRoute: true }]
-            : []),
-          ...(perfil === 'ADMINISTRADOR'
-            ? [{ label: 'Operação', href: '/operacao', isRoute: true }]
-            : []),
-        ];
+      : isAuthenticated && perfil
+        ? [
+            { label: 'Dashboard', href: '/dashboard', isRoute: true },
+            { label: 'Painel Público', href: '/painel', isRoute: true },
+            { label: 'Meu Portal', href: homeRoute, isRoute: true },
+            ...(perfil === 'ADMINISTRADOR'
+              ? [{ label: 'Operação', href: '/operacao', isRoute: true }]
+              : []),
+          ]
+        : [
+            { label: 'Início', href: '/', isRoute: true },
+            { label: 'Painel Público', href: '/painel', isRoute: true },
+          ];
 
   const handleLogout = () => {
     setShowUserMenu(false);
@@ -92,7 +67,7 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
       <div className="mx-auto max-w-7xl flex items-center justify-between gap-3">
         {/* Logo */}
         <Link
-          to="/"
+          to={isAuthenticated ? '/dashboard' : '/'}
           className="inline-flex items-center gap-2.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E2E8F0] pl-2 pr-4 py-1.5 shadow-pill transition-colors hover:border-[#1E6BFF]/40"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cobalt-gradient text-white">
@@ -148,65 +123,12 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
           {/* Painel Rápido */}
           <Link
             to="/painel"
-            title="Painel Público LGPD"
+            title="Painel Público"
             aria-label="Abrir Painel Público"
             className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#1E6BFF] hover:border-[#1E6BFF]/40 shadow-pill transition-colors"
           >
             <Monitor className="h-4 w-4" />
           </Link>
-
-          {/* Status da API */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowHealthPopover((v) => !v)}
-              title="Status da API"
-              aria-label="Status do servidor API"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] shadow-pill transition-colors relative"
-            >
-              <Activity className="h-4 w-4" />
-              <span
-                className={`absolute top-2 right-2 h-2 w-2 rounded-full ring-2 ring-white ${
-                  apiStatus === 'online'
-                    ? 'bg-emerald-500'
-                    : apiStatus === 'offline'
-                      ? 'bg-red-500'
-                      : 'bg-amber-400 animate-pulse'
-                }`}
-              />
-            </button>
-
-            {showHealthPopover && (
-              <div className="absolute right-0 mt-2 w-60 rounded-[20px] bg-white border border-[#E2E8F0] p-4 shadow-soft z-50">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#0F172A]">
-                    Monitoramento da API
-                  </span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      apiStatus === 'online'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : apiStatus === 'offline'
-                          ? 'bg-red-50 text-red-700'
-                          : 'bg-amber-50 text-amber-700'
-                    }`}
-                  >
-                    {apiStatus === 'online'
-                      ? 'Online'
-                      : apiStatus === 'offline'
-                        ? 'Indisponível'
-                        : 'Verificando'}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-[11px] text-[#64748B]">
-                  Serviço: <code className="text-[#0F172A]">{apiService}</code>
-                </p>
-                <p className="mt-1 text-[11px] text-[#64748B]">
-                  Endpoint: <code className="text-[#0F172A]">GET /api/health</code>
-                </p>
-              </div>
-            )}
-          </div>
 
           {/* Login / Perfil */}
           {isAuthenticated && usuario ? (
@@ -251,7 +173,7 @@ export function Navbar({ variant = 'landing' }: NavbarProps) {
                         className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#0F172A] hover:bg-[#EFF4FB] hover:text-[#1E6BFF] transition-colors"
                       >
                         <Activity className="h-3.5 w-3.5" />
-                        Workspace Operacional
+                        Área operacional
                       </Link>
                     )}
                     <button

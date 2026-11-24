@@ -71,9 +71,9 @@ export function OperacaoPage() {
   }, [usuario, tipoUsuario, toast]);
 
   const tabs: Array<{ id: TabOperacao; label: string; icon: typeof Radio }> = [
-    { id: 'fila', label: 'Controle da Fila', icon: Radio },
-    { id: 'recepcao', label: 'Recepção & Check-in', icon: ClipboardCheck },
-    { id: 'agendas', label: 'Agendas & Agendamentos', icon: CalendarDays },
+    { id: 'fila', label: 'Controle da fila', icon: Radio },
+    { id: 'recepcao', label: 'Recepção e check-in', icon: ClipboardCheck },
+    { id: 'agendas', label: 'Agendas e agendamentos', icon: CalendarDays },
   ];
 
   const unidadeAtual = useMemo(
@@ -103,11 +103,10 @@ export function OperacaoPage() {
                 )}
               </div>
               <h1 className="mt-2 font-display text-2xl sm:text-3xl font-normal tracking-tight text-[#0F172A]">
-                Workspace Operacional
+                Painel operacional
               </h1>
               <p className="mt-1 text-xs text-[#64748B]">
-                Operador: <strong>{usuario?.nomeExibicao}</strong> · Controle de
-                recepção, check-in, chamadas e agendas.
+                Operador: <strong>{usuario?.nomeExibicao}</strong>. Gerencie a recepção, o check-in, as chamadas e as agendas.
               </p>
             </div>
 
@@ -150,14 +149,14 @@ export function OperacaoPage() {
                   className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E2E8F0] px-4 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F4F7FC] transition-colors"
                 >
                   <Shield className="h-3.5 w-3.5 text-[#1E6BFF]" />
-                  Painel Admin
+                  Painel administrativo
                 </Link>
               )}
             </div>
           </div>
 
-          {/* Tabs em Pílula */}
-          <div className="flex flex-wrap items-center gap-1.5 rounded-full bg-[#EFF4FB] p-1.5 border border-[#DBEAFE] w-fit">
+          {/* Abas */}
+          <div className="grid grid-cols-1 sm:inline-flex w-full sm:w-fit items-center gap-1.5 rounded-2xl sm:rounded-full bg-[#EFF4FB] p-1.5 border border-[#DBEAFE]">
             {tabs.map((item) => {
               const Icon = item.icon;
               const ativo = tab === item.id;
@@ -166,13 +165,13 @@ export function OperacaoPage() {
                   key={item.id}
                   type="button"
                   onClick={() => setTab(item.id)}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+                  className={`w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-xl sm:rounded-full px-4 py-2.5 sm:py-2 text-xs font-semibold transition-all ${
                     ativo
                       ? 'bg-[#1E6BFF] text-white shadow-sm'
                       : 'text-[#64748B] hover:text-[#0F172A]'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
                   {item.label}
                 </button>
               );
@@ -180,7 +179,7 @@ export function OperacaoPage() {
           </div>
         </section>
 
-        {/* Conteúdo da Tab */}
+        {/* Conteúdo da aba */}
         {loadingUnidades ? (
           <Skeleton className="h-72 rounded-[28px]" />
         ) : !unidadeId ? (

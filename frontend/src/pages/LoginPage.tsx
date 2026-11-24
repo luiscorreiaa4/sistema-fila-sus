@@ -4,7 +4,6 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-  KeyRound,
   Lock,
   ShieldCheck,
   Stethoscope,
@@ -130,12 +129,7 @@ export function LoginPage() {
         <div className="rounded-[32px] bg-white border border-[#E2E8F0] p-6 sm:p-10 shadow-soft grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
           {/* Esquerda: Formulário Minimalista */}
           <div className="lg:col-span-6 flex flex-col justify-center py-2 sm:px-4">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#EFF4FB] border border-[#DBEAFE] px-3.5 py-1.5 text-xs font-medium text-[#1E6BFF]">
-              <KeyRound className="h-3.5 w-3.5" />
-              Portal Autenticado · JWT
-            </div>
-
-            <h1 className="mt-5 font-display text-3xl sm:text-4xl font-normal tracking-tight text-[#0F172A]">
+            <h1 className="font-display text-3xl sm:text-4xl font-normal tracking-tight text-[#0F172A]">
               Entrar no Sistema Fila SUS
             </h1>
             <p className="mt-2 text-sm text-[#64748B]">
@@ -251,18 +245,18 @@ export function LoginPage() {
                 to="/cadastro"
                 className="font-semibold text-[#1E6BFF] hover:text-[#1554D9]"
               >
-                Realizar autocadastro de cidadão →
+                Fazer autocadastro de cidadão →
               </Link>
             </div>
 
-            {/* Acordeão discreto de contas Seed para avaliação */}
+            {/* Contas de teste */}
             <div className="mt-7 pt-5 border-t border-[#E2E8F0]">
               <button
                 type="button"
                 onClick={() => setMostrarDemos((v) => !v)}
                 className="w-full flex items-center justify-between text-xs font-medium text-[#64748B] hover:text-[#0F172A]"
               >
-                <span>Contas de demonstração (Seed)</span>
+                <span>Contas de demonstração</span>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform ${
                     mostrarDemos ? 'rotate-180' : ''
@@ -296,23 +290,22 @@ export function LoginPage() {
           <div className="lg:col-span-6 flex">
             <BrandVisualPanel
               className="w-full"
-              eyebrow="Autenticação Segura · RBAC"
               headline="Um único portal conectado às unidades de saúde."
-              description="Cidadãos acessam sua fila e agendamentos; atendentes, profissionais e administradores operam com controle estrito por unidade vinculada."
+              description="Cidadãos acessam sua fila e seus agendamentos. Atendentes, profissionais e administradores trabalham apenas nas unidades a que estão vinculados."
               badges={[
                 {
                   icon: <Lock className="h-4 w-4" />,
-                  title: 'Proteção contra força bruta',
-                  subtitle: 'Bloqueio preventivo após 5 tentativas inválidas',
+                  title: 'Proteção contra tentativas repetidas',
+                  subtitle: 'Bloqueio após 5 tentativas inválidas',
                 },
                 {
                   icon: <ShieldCheck className="h-4 w-4" />,
-                  title: 'Privacidade e Controle de Perfil',
-                  subtitle: 'Autorização validada no servidor via token JWT',
+                  title: 'Acesso por perfil',
+                  subtitle: 'Permissões conferidas pelo servidor',
                 },
                 {
                   icon: <UserCheck className="h-4 w-4" />,
-                  title: 'Separação Cidadão & Equipe',
+                  title: 'Cidadão e equipe',
                   subtitle: 'O mesmo CPF pode operar nos dois perfis',
                 },
               ]}

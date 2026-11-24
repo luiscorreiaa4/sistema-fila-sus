@@ -60,10 +60,10 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
     entrada: EntradaFilaDTO;
   } | null>(null);
 
-  // Modal Cadastro Assistido
+  // Modal de cadastro assistido
   const [modalAssistido, setModalAssistido] = useState(false);
 
-  // Modal Marcação Assistida
+  // Modal de marcação assistida
   const [modalMarcar, setModalMarcar] = useState(false);
   const [vagasUnidade, setVagasUnidade] = useState<VagaDisponivelDTO[]>([]);
   const [carregandoVagas, setCarregandoVagas] = useState(false);
@@ -98,7 +98,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
       });
       setResultadoCheckin(res);
       toast.success(
-        res.jaRegistrado ? 'Check-in já havia sido registrado' : 'Check-in confirmado!',
+        res.jaRegistrado ? 'Check-in já havia sido registrado' : 'Check-in confirmado.',
         `Senha ${res.entrada.senhaAtendimento} (${LABELS_GRUPO_ATENDIMENTO[res.entrada.grupoAtendimento]})`
       );
     } catch (err) {
@@ -150,7 +150,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
         pacienteId: pacienteEncontrado.id,
       });
       toast.success(
-        'Agendamento assistido realizado!',
+        'Agendamento assistido realizado.',
         `Protocolo ${res.agendamento.protocolo} · Senha ${res.agendamento.senhaAtendimento}`
       );
       setModalMarcar(false);
@@ -165,7 +165,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Coluna Esquerda: Check-in Presencial */}
+      {/* Coluna esquerda: check-in presencial */}
       <section className="lg:col-span-5 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -173,7 +173,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
               Recepção
             </span>
             <h2 className="mt-1 font-display text-xl font-medium text-[#0F172A]">
-              Check-in na Fila do Dia
+              Check-in na fila do dia
             </h2>
             <p className="mt-1 text-xs text-[#64748B]">
               Confirme a chegada por protocolo ou CPF para gerar a senha
@@ -205,7 +205,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
                     : 'text-[#64748B]'
                 }`}
               >
-                Por Protocolo
+                Por protocolo
               </button>
               <button
                 type="button"
@@ -226,7 +226,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
             <FormField
               label={
                 modoCheckin === 'protocolo'
-                  ? 'Protocolo do Agendamento'
+                  ? 'Protocolo do agendamento'
                   : 'CPF do Paciente'
               }
               htmlFor="checkin-valor"
@@ -290,7 +290,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
         )}
       </section>
 
-      {/* Coluna Direita: Busca de Paciente por CPF + Cadastro Assistido */}
+      {/* Coluna direita: busca por CPF e cadastro assistido */}
       <section className="lg:col-span-7 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -298,7 +298,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
               Localizar Cidadão
             </span>
             <h2 className="mt-1 font-display text-xl font-medium text-[#0F172A]">
-              Busca por CPF &amp; Cadastro Assistido
+              Busca por CPF e cadastro assistido
             </h2>
           </div>
 
@@ -309,7 +309,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
               icon={<UserPlus className="h-3.5 w-3.5" />}
               onClick={() => setModalAssistido(true)}
             >
-              Novo Cadastro Assistido
+              Novo cadastro assistido
             </PillButton>
           )}
         </div>
@@ -385,7 +385,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
               <strong>Contato:</strong> {pacienteEncontrado.email || '—'} ·{' '}
               {pacienteEncontrado.celular || '—'} | <strong>Endereço:</strong>{' '}
               {pacienteEncontrado.endereco.logradouro},{' '}
-              {pacienteEncontrado.endereco.numero} —{' '}
+              {pacienteEncontrado.endereco.numero},{' '}
               {pacienteEncontrado.endereco.bairro},{' '}
               {pacienteEncontrado.endereco.municipio}/
               {pacienteEncontrado.endereco.estado}
@@ -399,7 +399,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
                   icon={<CalendarPlus className="h-3.5 w-3.5" />}
                   onClick={() => void abrirMarcacaoAssistida()}
                 >
-                  Marcação Assistida
+                  Marcação assistida
                 </PillButton>
                 <PillButton
                   size="sm"
@@ -410,7 +410,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
                     void executarCheckin({ cpf: pacienteEncontrado.cpf })
                   }
                 >
-                  Check-in Imediato por CPF
+                  Check-in imediato por CPF
                 </PillButton>
               </div>
             )}
@@ -423,11 +423,11 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
         )}
       </section>
 
-      {/* Modal Cadastro Assistido */}
+      {/* Modal de cadastro assistido */}
       <Modal
         open={modalAssistido}
         onClose={() => setModalAssistido(false)}
-        title="Cadastro Assistido de Paciente"
+        title="Cadastro assistido de paciente"
         subtitle="Registrado com origem ASSISTIDO pela equipe da recepção."
         size="xl"
       >
@@ -438,16 +438,16 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
             setModalAssistido(false);
             setPacienteEncontrado(p);
             setCpfBusca(p.cpfFormatado);
-            toast.success('Paciente cadastrado!', `${p.nomeExibicao} pronto para atendimento.`);
+            toast.success('Paciente cadastrado.',`${p.nomeExibicao} pronto para atendimento.`);
           }}
         />
       </Modal>
 
-      {/* Modal Marcação Assistida */}
+      {/* Modal de marcação assistida */}
       <Modal
         open={modalMarcar}
         onClose={() => setModalMarcar(false)}
-        title="Marcação Assistida"
+        title="Marcação assistida"
         subtitle={
           pacienteEncontrado
             ? `Selecionar vaga aberta nesta unidade para ${pacienteEncontrado.nomeExibicao}`
@@ -485,7 +485,7 @@ export function RecepcaoTab({ unidadeId, perfil }: RecepcaoTabProps) {
                   loading={marcandoVagaId === vaga.id}
                   onClick={() => void handleMarcarParaPaciente(vaga.id)}
                 >
-                  Agendar Vaga
+                  Agendar vaga
                 </PillButton>
               </div>
             ))}

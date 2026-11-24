@@ -1,6 +1,4 @@
-// ============================================================================
-// Enums (espelho estrito de backend/prisma/schema.prisma e domínio)
-// ============================================================================
+// Enums espelhados de backend/prisma/schema.prisma
 
 export type StatusUnidade = 'ATIVA' | 'INATIVA';
 export type StatusCadastro = 'ATIVO' | 'INATIVO';
@@ -40,9 +38,7 @@ export type SituacaoFila =
 export type EstadoChamada = 'CHAMADO' | 'EM_ATENDIMENTO' | 'CONCLUIDO' | 'NAO_ATENDIDO';
 export type EstrategiaFila = 'RODIZIO_5_1' | 'ORDEM_CHEGADA';
 
-// ============================================================================
-// DTOs de Resposta (espelho de backend/src/infrastructure/http/presenters/presenters.ts)
-// ============================================================================
+// DTOs de resposta, espelho de presenters.ts do backend
 
 export interface Endereco {
   cep: string;
@@ -285,9 +281,7 @@ export interface ApiErrorBody {
   detalhes?: ApiErrorDetail[];
 }
 
-// ============================================================================
-// Payloads de Entrada (espelho de backend/src/infrastructure/http/validators/schemas.ts)
-// ============================================================================
+// Payloads de entrada, espelho de schemas.ts do backend
 
 export interface LoginInput {
   cpf: string;

@@ -52,7 +52,7 @@ export function setStoredToken(token: string): void {
   try {
     window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
   } catch {
-    // ignore storage quota errors
+    // Storage cheio ou bloqueado: o token não é persistido
   }
 }
 
@@ -60,7 +60,7 @@ export function clearStoredToken(): void {
   try {
     window.localStorage.removeItem(TOKEN_STORAGE_KEY);
   } catch {
-    // ignore
+    // Storage indisponível: nada a remover
   }
 }
 
@@ -169,9 +169,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return data as T;
 }
 
-// ============================================================================
-// Módulos de API alinhados a backend/src/infrastructure/http/routes/index.ts
-// ============================================================================
+// Endpoints agrupados como em routes/index.ts do backend
 
 export const healthApi = {
   check: () => request<HealthResponse>('/health', { auth: false }),

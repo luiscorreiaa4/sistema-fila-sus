@@ -329,13 +329,13 @@ export function AdminPage() {
         <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 sm:p-8 shadow-soft space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <StatusBadge tone="info">Gestão da Rede · Administrador</StatusBadge>
+              <StatusBadge tone="info">Gestão da rede · Administrador</StatusBadge>
               <h1 className="mt-2 font-display text-2xl sm:text-3xl font-normal tracking-tight text-[#0F172A]">
-                Painel Administrativo
+                Painel administrativo
               </h1>
               <p className="mt-1 text-xs text-[#64748B]">
-                Gerencie unidades de saúde, profissionais vinculados e catálogo de
-                serviços assistenciais.
+                Gerencie as unidades de saúde, os profissionais vinculados e os
+                serviços oferecidos.
               </p>
             </div>
 
@@ -345,7 +345,7 @@ export function AdminPage() {
                 className="inline-flex items-center gap-2 rounded-full bg-[#EFF4FB] border border-[#DBEAFE] px-4 py-2 text-xs font-semibold text-[#1E6BFF] hover:bg-[#DBEAFE] transition-colors"
               >
                 <Activity className="h-3.5 w-3.5" />
-                Ir para Operação / Agendas
+                Ir para operação e agendas
               </Link>
             </div>
           </div>
@@ -353,7 +353,7 @@ export function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#E2E8F0]">
             <div className="rounded-2xl bg-[#F8FAFC] p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-[#64748B]">Unidades Ativas</p>
+                <p className="text-xs text-[#64748B]">Unidades ativas</p>
                 <p className="kpi-number text-3xl text-[#0F172A] mt-1">
                   {unidadesAtivas.length}
                   <span className="text-sm font-normal text-[#64748B]">
@@ -369,7 +369,7 @@ export function AdminPage() {
 
             <div className="rounded-2xl bg-[#F8FAFC] p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-[#64748B]">Profissionais Ativos</p>
+                <p className="text-xs text-[#64748B]">Profissionais ativos</p>
                 <p className="kpi-number text-3xl text-[#0F172A] mt-1">
                   {profissionais.filter((p) => p.status === 'ATIVO').length}
                   <span className="text-sm font-normal text-[#64748B]">
@@ -385,7 +385,7 @@ export function AdminPage() {
 
             <div className="rounded-2xl bg-[#F8FAFC] p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-[#64748B]">Serviços Ativos</p>
+                <p className="text-xs text-[#64748B]">Serviços ativos</p>
                 <p className="kpi-number text-3xl text-[#0F172A] mt-1">
                   {servicos.filter((s) => s.status === 'ATIVO').length}
                   <span className="text-sm font-normal text-[#64748B]">
@@ -402,11 +402,11 @@ export function AdminPage() {
         </section>
 
         {/* Tabs + Botão Novo */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex flex-wrap gap-1.5 rounded-full bg-white border border-[#E2E8F0] p-1.5 shadow-pill">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3">
+          <div className="grid grid-cols-1 sm:inline-flex w-full sm:w-auto gap-1.5 rounded-2xl sm:rounded-full bg-white border border-[#E2E8F0] p-1.5 shadow-pill">
             {(
               [
-                { id: 'unidades', label: 'Unidades de Saúde', icon: Building2 },
+                { id: 'unidades', label: 'Unidades de saúde', icon: Building2 },
                 { id: 'profissionais', label: 'Profissionais', icon: UserCog },
                 { id: 'servicos', label: 'Serviços', icon: Stethoscope },
               ] as const
@@ -418,13 +418,13 @@ export function AdminPage() {
                   key={item.id}
                   type="button"
                   onClick={() => setAba(item.id)}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                  className={`w-full sm:w-auto inline-flex items-center justify-center sm:justify-start gap-2 rounded-xl sm:rounded-full px-4 py-2.5 sm:py-2 text-xs font-semibold transition-colors ${
                     ativo
-                      ? 'bg-[#1E6BFF] text-white'
+                      ? 'bg-[#1E6BFF] text-white shadow-sm'
                       : 'text-[#64748B] hover:text-[#0F172A]'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
                   {item.label}
                 </button>
               );
@@ -440,7 +440,7 @@ export function AdminPage() {
                 setModalUnidade(true);
               }}
             >
-              Nova Unidade
+              Nova unidade
             </PillButton>
           )}
           {aba === 'profissionais' && (
@@ -452,7 +452,7 @@ export function AdminPage() {
                 setModalProfissional(true);
               }}
             >
-              Novo Profissional
+              Novo profissional
             </PillButton>
           )}
           {aba === 'servicos' && (
@@ -464,12 +464,12 @@ export function AdminPage() {
                 setModalServico(true);
               }}
             >
-              Novo Serviço
+              Novo serviço
             </PillButton>
           )}
         </div>
 
-        {/* Tabela Minimalista */}
+        {/* Lista */}
         <section className="rounded-[28px] bg-white border border-[#E2E8F0] shadow-soft overflow-hidden">
           {loading ? (
             <TableSkeleton rows={5} />
@@ -563,7 +563,7 @@ export function AdminPage() {
                     <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] uppercase tracking-wider text-[#64748B]">
                       <th className="py-3.5 px-6">Profissional</th>
                       <th className="py-3.5 px-4">Perfil / Conselho</th>
-                      <th className="py-3.5 px-4">Unidades Vinculadas</th>
+                      <th className="py-3.5 px-4">Unidades vinculadas</th>
                       <th className="py-3.5 px-4">Status</th>
                       <th className="py-3.5 px-6 text-right">Ações</th>
                     </tr>
@@ -651,8 +651,8 @@ export function AdminPage() {
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] uppercase tracking-wider text-[#64748B]">
                     <th className="py-3.5 px-6">Serviço</th>
-                    <th className="py-3.5 px-4">Categoria &amp; Especialidade</th>
-                    <th className="py-3.5 px-4">Modo de Acesso</th>
+                    <th className="py-3.5 px-4">Categoria e especialidade</th>
+                    <th className="py-3.5 px-4">Modo de acesso</th>
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-6 text-right">Ações</th>
                   </tr>
@@ -710,13 +710,13 @@ export function AdminPage() {
       <Modal
         open={modalUnidade}
         onClose={() => setModalUnidade(false)}
-        title="Nova Unidade de Saúde"
+        title="Nova unidade de saúde"
         size="lg"
       >
         <form onSubmit={handleCriarUnidade} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
-              label="Nome da Unidade"
+              label="Nome da unidade"
               htmlFor="u-nome"
               required
               className="sm:col-span-2"
@@ -846,7 +846,7 @@ export function AdminPage() {
               Cancelar
             </PillButton>
             <PillButton type="submit" loading={salvando}>
-              Cadastrar Unidade
+              Cadastrar unidade
             </PillButton>
           </div>
         </form>
@@ -856,7 +856,7 @@ export function AdminPage() {
       <Modal
         open={modalProfissional}
         onClose={() => setModalProfissional(false)}
-        title="Novo Profissional / Colaborador"
+        title="Novo profissional ou colaborador"
         size="lg"
       >
         <form onSubmit={handleCriarProfissional} className="space-y-4">
@@ -886,14 +886,14 @@ export function AdminPage() {
               />
             </FormField>
 
-            <FormField label="Nível de Acesso" htmlFor="pr-nivel" required>
+            <FormField label="Nível de acesso" htmlFor="pr-nivel" required>
               <SelectInput
                 id="pr-nivel"
                 value={pNivelAcesso}
                 onChange={(e) => setPNivelAcesso(e.target.value as NivelAcesso)}
               >
                 <option value="ATENDENTE">Atendente</option>
-                <option value="PROFISSIONAL_SAUDE">Profissional de Saúde</option>
+                <option value="PROFISSIONAL_SAUDE">Profissional de saúde</option>
                 <option value="ADMINISTRADOR">Administrador</option>
               </SelectInput>
             </FormField>
@@ -919,7 +919,7 @@ export function AdminPage() {
           {pNivelAcesso === 'PROFISSIONAL_SAUDE' && (
             <div className="rounded-2xl bg-[#F4F7FC] border border-[#DBEAFE] p-4 space-y-3">
               <p className="text-xs font-semibold text-[#1E6BFF]">
-                Registro Profissional (obrigatório para Profissional de Saúde)
+                Registro profissional (obrigatório para profissional de saúde)
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <FormField label="Conselho" htmlFor="pr-conselho" required>
@@ -969,7 +969,7 @@ export function AdminPage() {
 
           <div className="space-y-2">
             <p className="text-xs font-medium text-[#0F172A]">
-              Unidades Ativas Vinculadas <span className="text-[#1E6BFF]">*</span>
+              Unidades ativas vinculadas <span className="text-[#1E6BFF]">*</span>
             </p>
             <div className="flex flex-wrap gap-2">
               {unidadesAtivas.map((u) => {
@@ -1029,7 +1029,7 @@ export function AdminPage() {
               Cancelar
             </PillButton>
             <PillButton type="submit" loading={salvando}>
-              Cadastrar Profissional
+              Cadastrar profissional
             </PillButton>
           </div>
         </form>
@@ -1039,10 +1039,10 @@ export function AdminPage() {
       <Modal
         open={modalServico}
         onClose={() => setModalServico(false)}
-        title="Novo Serviço Assistencial"
+        title="Novo serviço assistencial"
       >
         <form onSubmit={handleCriarServico} className="space-y-4">
-          <FormField label="Nome do Serviço" htmlFor="s-nome" required>
+          <FormField label="Nome do serviço" htmlFor="s-nome" required>
             <TextInput
               id="s-nome"
               value={sNome}
@@ -1064,7 +1064,7 @@ export function AdminPage() {
               </SelectInput>
             </FormField>
 
-            <FormField label="Modo de Acesso" htmlFor="s-modo">
+            <FormField label="Modo de acesso" htmlFor="s-modo">
               <SelectInput
                 id="s-modo"
                 value={sModoAcesso}
@@ -1087,12 +1087,12 @@ export function AdminPage() {
             />
           </FormField>
 
-          <FormField label="Orientações de Preparo (opcional)" htmlFor="s-prep">
+          <FormField label="Orientações de preparo (opcional)" htmlFor="s-prep">
             <TextAreaInput
               id="s-prep"
               value={sPreparo}
               onChange={(e) => setSPreparo(e.target.value)}
-              placeholder="Ex.: Trazer exames anteriores e Cartão SUS..."
+              placeholder="Ex.: trazer exames anteriores e cartão do SUS"
             />
           </FormField>
 
@@ -1105,7 +1105,7 @@ export function AdminPage() {
               Cancelar
             </PillButton>
             <PillButton type="submit" loading={salvando}>
-              Cadastrar Serviço
+              Cadastrar serviço
             </PillButton>
           </div>
         </form>
@@ -1117,7 +1117,7 @@ export function AdminPage() {
         onClose={() => setAlvoInativacao(null)}
         title={
           alvoInativacao?.tipo === 'unidade'
-            ? 'Inativar Unidade de Saúde'
+            ? 'Inativar unidade de saúde'
             : 'Inativar Profissional'
         }
         subtitle={alvoInativacao?.nome}
@@ -1127,13 +1127,13 @@ export function AdminPage() {
             label="Motivo da inativação"
             htmlFor="adm-motivo-inat"
             required
-            hint="Obrigatório (mínimo 5 caracteres). Não há exclusão física."
+            hint="Obrigatório, com pelo menos 5 caracteres. O cadastro não é apagado, só inativado."
           >
             <TextAreaInput
               id="adm-motivo-inat"
               value={motivoInativacao}
               onChange={(e) => setMotivoInativacao(e.target.value)}
-              placeholder="Descreva o motivo administrativo..."
+              placeholder="Descreva o motivo da inativação"
             />
           </FormField>
 

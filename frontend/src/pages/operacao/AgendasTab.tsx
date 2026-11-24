@@ -109,14 +109,14 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
   const [loadingAgendas, setLoadingAgendas] = useState(true);
   const [alterandoAgendaId, setAlterandoAgendaId] = useState<string | null>(null);
 
-  // Agendamentos da Unidade
+  // Agendamentos da unidade
   const [agendamentos, setAgendamentos] = useState<AgendamentoDetalhadoDTO[]>([]);
   const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
   const [filtroData, setFiltroData] = useState(hojeIsoMaceio());
   const [filtroProtocolo, setFiltroProtocolo] = useState('');
   const [filtroCpf, setFiltroCpf] = useState('');
 
-  // Modal Nova Agenda
+  // Modal de nova agenda
   const [modalAgenda, setModalAgenda] = useState(false);
   const [servicoId, setServicoId] = useState('');
   const [profissionalId, setProfissionalId] = useState('');
@@ -134,7 +134,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
   const [publicarAoCriar, setPublicarAoCriar] = useState(true);
   const [criandoAgenda, setCriandoAgenda] = useState(false);
 
-  // Modal Cancelamento
+  // Modal de cancelamento
   const [agCancelar, setAgCancelar] = useState<AgendamentoDetalhadoDTO | null>(null);
   const [motivoCancel, setMotivoCancel] = useState('');
   const [cancelando, setCancelando] = useState(false);
@@ -207,7 +207,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
       toast.success(
         `Agenda ${LABELS_SITUACAO_AGENDA[res.agenda.situacao]}`,
         res.vagasCriadas > 0
-          ? `${res.vagasCriadas} vagas materializadas.`
+          ? `${res.vagasCriadas} vagas geradas.`
           : undefined
       );
       await carregarAgendas();
@@ -266,7 +266,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
         publicar: publicarAoCriar,
       });
       toast.success(
-        publicarAoCriar ? 'Agenda criada e publicada!' : 'Agenda salva como rascunho!',
+        publicarAoCriar ? 'Agenda criada e publicada.' : 'Agenda salva como rascunho.',
         res.vagasCriadas > 0
           ? `${res.vagasCriadas} vagas geradas para agendamento.`
           : undefined
@@ -284,7 +284,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
     try {
       const res = await filaApi.checkin({ unidadeId, protocolo });
       toast.success(
-        res.jaRegistrado ? 'Já estava na fila' : 'Check-in realizado!',
+        res.jaRegistrado ? 'Já estava na fila' : 'Check-in realizado.',
         `Senha ${res.entrada.senhaAtendimento}`
       );
       await carregarAgendamentos();
@@ -341,7 +341,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             }`}
           >
             <ClipboardList className="h-3.5 w-3.5" />
-            Agendamentos da Unidade ({agendamentos.length})
+            Agendamentos da unidade ({agendamentos.length})
           </button>
         </div>
 
@@ -351,14 +351,12 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             icon={<CalendarPlus className="h-3.5 w-3.5" />}
             onClick={() => setModalAgenda(true)}
           >
-            Nova Agenda
+            Nova agenda
           </PillButton>
         )}
       </div>
 
-      {/* ================================================================
-          SUB-ABA: AGENDAS
-      ================================================================ */}
+      {/* Sub-aba: agendas */}
       {subAba === 'agendas' && (
         <section className="space-y-4">
           {loadingAgendas ? (
@@ -370,8 +368,8 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
             <EmptyState
               icon={<CalendarDays className="h-6 w-6" />}
               title="Nenhuma agenda cadastrada para esta unidade"
-              description="Crie e publique uma agenda periódica para disponibilizar vagas de atendimento."
-              actionLabel={podeGerirAgenda ? 'Criar Primeira Agenda' : undefined}
+              description="Crie e publique uma agenda para liberar vagas de atendimento."
+              actionLabel={podeGerirAgenda ? 'Criar primeira agenda' : undefined}
               onAction={podeGerirAgenda ? () => setModalAgenda(true) : undefined}
             />
           ) : (
@@ -463,9 +461,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
         </section>
       )}
 
-      {/* ================================================================
-          SUB-ABA: AGENDAMENTOS DA UNIDADE
-      ================================================================ */}
+      {/* Sub-aba: agendamentos da unidade */}
       {subAba === 'agendamentos' && (
         <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-5">
           <form
@@ -493,7 +489,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
               />
             </FormField>
 
-            <FormField label="CPF do Paciente" htmlFor="filtro-ag-cpf">
+            <FormField label="CPF do paciente" htmlFor="filtro-ag-cpf">
               <TextInput
                 id="filtro-ag-cpf"
                 inputMode="numeric"
@@ -528,7 +524,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
                     <th className="py-2.5 pr-4">Horário</th>
                     <th className="py-2.5 pr-4">Paciente</th>
                     <th className="py-2.5 pr-4">Serviço</th>
-                    <th className="py-2.5 pr-4">Protocolo / Senha</th>
+                    <th className="py-2.5 pr-4">Protocolo / senha</th>
                     <th className="py-2.5 pr-4">Situação</th>
                     {podeCancelarOuCheckin && (
                       <th className="py-2.5 text-right">Ações</th>
@@ -596,11 +592,11 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
         </section>
       )}
 
-      {/* Modal Criar Agenda */}
+      {/* Modal de criação de agenda */}
       <Modal
         open={modalAgenda}
         onClose={() => setModalAgenda(false)}
-        title="Nova Agenda de Atendimento"
+        title="Nova agenda de atendimento"
         subtitle="Defina período, dias da semana, horários e capacidade por vaga."
         size="lg"
       >
@@ -777,7 +773,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
                 onChange={(e) => setPublicarAoCriar(e.target.checked)}
                 className="h-4 w-4 rounded border-[#CBD5E1] text-[#1E6BFF]"
               />
-              Publicar imediatamente e materializar vagas
+              Publicar agora e gerar as vagas
             </label>
           </div>
 
@@ -790,17 +786,17 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
               Cancelar
             </PillButton>
             <PillButton type="submit" loading={criandoAgenda}>
-              Criar Agenda
+              Criar agenda
             </PillButton>
           </div>
         </form>
       </Modal>
 
-      {/* Modal Cancelar Agendamento */}
+      {/* Modal de cancelamento de agendamento */}
       <Modal
         open={Boolean(agCancelar)}
         onClose={() => setAgCancelar(null)}
-        title="Cancelar Agendamento Assistido"
+        title="Cancelar agendamento assistido"
         subtitle={
           agCancelar
             ? `Protocolo ${agCancelar.protocolo} · ${agCancelar.pacienteNomeExibicao ?? ''}`
@@ -829,7 +825,7 @@ export function AgendasTab({ unidadeId, perfil }: AgendasTabProps) {
               Voltar
             </PillButton>
             <PillButton type="submit" variant="danger" loading={cancelando}>
-              Confirmar Cancelamento
+              Confirmar cancelamento
             </PillButton>
           </div>
         </form>

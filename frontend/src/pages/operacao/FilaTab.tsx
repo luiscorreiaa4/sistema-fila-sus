@@ -66,6 +66,10 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
   const [chamandoProximo, setChamandoProximo] = useState(false);
   const [acaoEmAndamentoId, setAcaoEmAndamentoId] = useState<string | null>(null);
 
+  // Modal de confirmação para iniciar atendimento
+  const [entradaParaIniciar, setEntradaParaIniciar] =
+    useState<EntradaFilaOperacionalDTO | null>(null);
+
   // Modal de ausência
   const [entradaAusencia, setEntradaAusencia] =
     useState<EntradaFilaOperacionalDTO | null>(null);
@@ -128,7 +132,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
         toast.info('Fila vazia', res.mensagem);
       } else {
         toast.success(
-          `Senha ${res.entrada.senhaAtendimento} chamada!`,
+          `Senha ${res.entrada.senhaAtendimento} chamada.`,
           `Direcionada para ${res.chamada.guicheSala}`
         );
       }
@@ -188,7 +192,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
       toast.info(
         res.entrada.situacao === 'AGUARDANDO'
           ? 'Paciente recolocado no fim da fila'
-          : 'Ausência registrada (Não Atendido)',
+          : 'Ausência registrada (Não atendido)',
         `Senha ${res.entrada.senhaAtendimento}`
       );
       setEntradaAusencia(null);
@@ -227,13 +231,13 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Barra de Comando: Chamar Próximo */}
+      {/* Barra de comando: chamar próximo */}
       <form
         onSubmit={handleChamarProximo}
         className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col lg:flex-row lg:items-end justify-between gap-4"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-          <FormField label="Meu Guichê / Sala de Atendimento" htmlFor="op-guiche" required>
+          <FormField label="Meu guichê / sala de atendimento" htmlFor="op-guiche" required>
             <TextInput
               id="op-guiche"
               value={guicheSala}
@@ -242,14 +246,14 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
             />
           </FormField>
 
-          <FormField label="Estratégia de Chamada" htmlFor="op-estrategia">
+          <FormField label="Estratégia de chamada" htmlFor="op-estrategia">
             <SelectInput
               id="op-estrategia"
               value={estrategia}
               onChange={(e) => setEstrategia(e.target.value as EstrategiaFila)}
             >
-              <option value="RODIZIO_5_1">Rodízio Legal (5 Prioritários : 1 Comum)</option>
-              <option value="ORDEM_CHEGADA">Ordem de Chegada (Prioritário primeiro)</option>
+              <option value="RODIZIO_5_1">Rodízio legal (5 prioritários : 1 comum)</option>
+              <option value="ORDEM_CHEGADA">Ordem de chegada (prioritário primeiro)</option>
             </SelectInput>
           </FormField>
         </div>
@@ -270,7 +274,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
             loading={chamandoProximo}
             icon={<Megaphone className="h-4 w-4" />}
           >
-            Chamar Próximo ({aguardando.length})
+            Chamar próximo ({aguardando.length})
           </PillButton>
         </div>
       </form>
@@ -282,11 +286,11 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
         </div>
       ) : (
         <>
-          {/* Pacientes Chamados / Em Atendimento */}
+          {/* Pacientes chamados ou em atendimento */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-medium text-[#0F172A]">
-                Chamados e Em Atendimento ({emChamadaOuAtendimento.length})
+                Chamados e em atendimento ({emChamadaOuAtendimento.length})
               </h2>
             </div>
 
@@ -294,7 +298,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
               <EmptyState
                 icon={<Megaphone className="h-6 w-6" />}
                 title="Nenhum paciente em chamada ou atendimento"
-                description='Clique em "Chamar Próximo" para convocar a próxima senha da fila.'
+                description='Clique em "Chamar próximo" para convocar a próxima senha da fila.'
                 className="py-6"
               />
             ) : (
@@ -365,10 +369,25 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                               variant="primary"
                               hideIconCircle
                               disabled={ocupado}
-                              onClick={() => void executarAcaoEntrada(item.id, 'iniciar')}
+                              onClick={() => setEntradaParaIniciar(item)}
                             >
                               <Play className="h-3.5 w-3.5" />
-                              Iniciar Atendimento
+                              Iniciar atendimento
+                            </PillButton>
+
+                            <PillButton
+                              size="sm"
+                              variant="danger"
+                              hideIconCircle
+                              disabled={ocupado}
+                              onClick={() => {
+                                setEntradaAusencia(item);
+                                setMotivoAusencia('');
+                                setPermitirRecolocacao(item.recolocacoes === 0);
+                              }}
+                            >
+                              <UserX className="h-3.5 w-3.5" />
+                              Marcar ausente
                             </PillButton>
                           </>
                         )}
@@ -382,26 +401,9 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                             onClick={() => void executarAcaoEntrada(item.id, 'concluir')}
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
-                            Concluir Atendimento
+                            Concluir atendimento
                           </PillButton>
                         )}
-
-                        <PillButton
-                          size="sm"
-                          variant="danger"
-                          hideIconCircle
-                          disabled={ocupado}
-                          onClick={() => {
-                            setEntradaAusencia(item);
-                            setMotivoAusencia('');
-                            setPermitirRecolocacao(
-                              item.situacao === 'CHAMADO' && item.recolocacoes === 0
-                            );
-                          }}
-                        >
-                          <UserX className="h-3.5 w-3.5" />
-                          Marcar Ausente
-                        </PillButton>
                       </div>
                     </article>
                   );
@@ -410,12 +412,12 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
             )}
           </section>
 
-          {/* Aguardando na Fila */}
+          {/* Aguardando na fila */}
           <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-display text-lg font-medium text-[#0F172A]">
-                  Aguardando na Fila ({aguardando.length})
+                  Aguardando na fila ({aguardando.length})
                 </h2>
                 <p className="text-xs text-[#64748B]">
                   Pacientes com check-in confirmado hoje nesta unidade
@@ -436,7 +438,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                       <th className="py-2.5 pr-4">Senha</th>
                       <th className="py-2.5 pr-4">Paciente</th>
                       <th className="py-2.5 pr-4">Serviço</th>
-                      <th className="py-2.5 pr-4">Grupo / Critério</th>
+                      <th className="py-2.5 pr-4">Grupo e critério</th>
                       <th className="py-2.5 pr-4">Chegada</th>
                       <th className="py-2.5 text-right">Ordem</th>
                     </tr>
@@ -488,11 +490,11 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
             )}
           </section>
 
-          {/* Finalizados do Dia */}
+          {/* Finalizados de hoje */}
           {finalizados.length > 0 && (
             <section className="rounded-[24px] bg-white border border-[#E2E8F0] p-6 space-y-3">
               <h3 className="font-display text-sm font-semibold text-[#0F172A]">
-                Histórico Finalizado Hoje ({finalizados.length})
+                Histórico de hoje ({finalizados.length})
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {finalizados.map((item) => (
@@ -521,14 +523,75 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
         </>
       )}
 
-      {/* Modal Ausência */}
+      {/* Modal de confirmação para iniciar atendimento */}
+      <Modal
+        open={Boolean(entradaParaIniciar)}
+        onClose={() => setEntradaParaIniciar(null)}
+        title="Confirmar início do atendimento"
+        subtitle={
+          entradaParaIniciar
+            ? `Senha ${entradaParaIniciar.senhaAtendimento} · ${entradaParaIniciar.nomeExibicao}`
+            : undefined
+        }
+        size="sm"
+      >
+        {entradaParaIniciar && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-[#F4F7FC] border border-[#E2E8F0] p-4 space-y-1.5 text-xs text-[#64748B]">
+              <p>
+                <strong className="text-[#0F172A]">Paciente:</strong>{' '}
+                {entradaParaIniciar.nomeExibicao}
+              </p>
+              <p>
+                <strong className="text-[#0F172A]">Serviço:</strong>{' '}
+                {entradaParaIniciar.servicoNome}
+              </p>
+              {entradaParaIniciar.ultimaChamada?.guicheSala && (
+                <p>
+                  <strong className="text-[#0F172A]">Local da chamada:</strong>{' '}
+                  {entradaParaIniciar.ultimaChamada.guicheSala}
+                </p>
+              )}
+            </div>
+
+            <p className="text-xs text-[#64748B] leading-relaxed">
+              Ao confirmar, o atendimento será iniciado e a senha passará para o
+              status <strong>Em atendimento</strong>.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <PillButton
+                variant="ghost"
+                hideIconCircle
+                onClick={() => setEntradaParaIniciar(null)}
+                disabled={acaoEmAndamentoId === entradaParaIniciar.id}
+              >
+                Cancelar
+              </PillButton>
+              <PillButton
+                variant="primary"
+                loading={acaoEmAndamentoId === entradaParaIniciar.id}
+                onClick={async () => {
+                  const id = entradaParaIniciar.id;
+                  await executarAcaoEntrada(id, 'iniciar');
+                  setEntradaParaIniciar(null);
+                }}
+              >
+                Confirmar início
+              </PillButton>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal de ausência */}
       <Modal
         open={Boolean(entradaAusencia)}
         onClose={() => setEntradaAusencia(null)}
-        title="Registrar Ausência na Chamada"
+        title="Registrar ausência na chamada"
         subtitle={
           entradaAusencia
-            ? `Senha ${entradaAusencia.senhaAtendimento} — ${entradaAusencia.nomeExibicao}`
+            ? `Senha ${entradaAusencia.senhaAtendimento} · ${entradaAusencia.nomeExibicao}`
             : undefined
         }
       >
@@ -553,7 +616,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
             ) : (
               <div className="rounded-2xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-800">
                 Esta entrada não é elegível a nova recolocação e será encerrada
-                como <strong>Não Atendido</strong>.
+                como <strong>Não atendido</strong>.
               </div>
             )}
 
@@ -579,7 +642,7 @@ export function FilaTab({ unidadeId }: FilaTabProps) {
                 variant="danger"
                 loading={registrandoAusencia}
               >
-                Confirmar Ausência
+                Confirmar ausência
               </PillButton>
             </div>
           </form>

@@ -8,7 +8,6 @@ export interface BrandBadgeItem {
 }
 
 interface BrandVisualPanelProps {
-  eyebrow?: string;
   headline: string;
   description: string;
   badges: [BrandBadgeItem, BrandBadgeItem, BrandBadgeItem];
@@ -16,7 +15,6 @@ interface BrandVisualPanelProps {
 }
 
 export function BrandVisualPanel({
-  eyebrow = 'Rede Pública Integrada · SUS',
   headline,
   description,
   badges,
@@ -26,7 +24,7 @@ export function BrandVisualPanel({
     <div
       className={`relative overflow-hidden rounded-[32px] bg-cobalt-gradient p-7 sm:p-9 text-white flex flex-col justify-between min-h-[460px] shadow-cobalt ${className}`}
     >
-      {/* Brilhos orgânicos de fundo */}
+      {/* Brilhos de fundo */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/15 blur-3xl"
@@ -36,7 +34,7 @@ export function BrandVisualPanel({
         className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-[#0A38A3]/50 blur-3xl"
       />
 
-      {/* Ilustração vetorial clínica minimalista */}
+      {/* Ilustração decorativa */}
       <svg
         aria-hidden="true"
         viewBox="0 0 420 280"
@@ -56,12 +54,7 @@ export function BrandVisualPanel({
 
       {/* Cabeçalho superior */}
       <div className="relative z-10 max-w-md">
-        <span className="glass-on-cobalt inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-white">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
-          {eyebrow}
-        </span>
-
-        <h2 className="mt-6 font-display text-2xl sm:text-3xl font-normal tracking-tight leading-[1.12] text-white">
+        <h2 className="font-display text-2xl sm:text-3xl font-normal tracking-tight leading-[1.12] text-white">
           {headline}
         </h2>
         <p className="mt-3 text-sm text-white/80 leading-relaxed">
@@ -69,23 +62,23 @@ export function BrandVisualPanel({
         </p>
       </div>
 
-      {/* 3 Badges Glassmórficos flutuantes */}
+      {/* 3 badges */}
       <div className="relative z-10 mt-8 grid grid-cols-1 gap-3">
-        <div className="sm:mr-10">
+        <div>
           <GlassBadge
             icon={badges[0].icon}
             title={badges[0].title}
             subtitle={badges[0].subtitle}
           />
         </div>
-        <div className="sm:ml-10">
+        <div>
           <GlassBadge
             icon={badges[1].icon}
             title={badges[1].title}
             subtitle={badges[1].subtitle}
           />
         </div>
-        <div className="sm:mr-6">
+        <div>
           <GlassBadge
             icon={badges[2].icon}
             title={badges[2].title}

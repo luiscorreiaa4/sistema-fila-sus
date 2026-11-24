@@ -50,3 +50,25 @@ export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) 
 
   return <>{children}</>;
 }
+
+export function PublicOnlyRoute({ children }: { children: ReactNode }) {
+  const { isLoading, isAuthenticated, perfil } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-[28px] bg-white border border-[#E2E8F0] p-8 shadow-soft space-y-4">
+          <div className="h-4 w-32 rounded-full bg-[#EFF4FB] animate-pulse" />
+          <div className="h-8 w-3/4 rounded-2xl bg-[#EFF4FB] animate-pulse" />
+          <div className="h-24 w-full rounded-2xl bg-[#EFF4FB] animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated && perfil) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}

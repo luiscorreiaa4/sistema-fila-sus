@@ -6,11 +6,10 @@ import {
   Clock,
   Maximize2,
   Minimize2,
-  Radio,
-  ShieldCheck,
   Volume2,
   VolumeX,
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import { painelPublicoApi, unidadesApi } from '../services/api';
 import type { ChamadaPainelPublicoDTO, UnidadeSaudeDTO } from '../types/api';
 import {
@@ -25,6 +24,8 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 export function PainelPublicoPage() {
   const { unidadeId } = useParams<{ unidadeId?: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const destinoVoltar = isAuthenticated ? '/dashboard' : '/';
 
   const [unidades, setUnidades] = useState<UnidadeSaudeDTO[]>([]);
   const [selectedUnidadeId, setSelectedUnidadeId] = useState<string>(
@@ -160,12 +161,12 @@ export function PainelPublicoPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col">
-      {/* Barra superior minimalista para TVs e Totens */}
+      {/* Barra superior para TVs e totens */}
       <header className="px-4 sm:px-6 lg:px-8 pt-4">
         <div className="mx-auto max-w-7xl rounded-full bg-white border border-[#E2E8F0] px-4 py-2.5 shadow-pill flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
-              to="/"
+              to={destinoVoltar}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EFF4FB] text-[#1E6BFF] hover:bg-[#DBEAFE] transition-colors"
               title="Voltar ao portal"
             >
@@ -174,11 +175,8 @@ export function PainelPublicoPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-display text-sm font-semibold text-[#0F172A]">
-                  Painel Público de Chamadas
+                  Painel público de chamadas
                 </span>
-                <StatusBadge tone="info" dot pulse>
-                  Tempo Real · LGPD
-                </StatusBadge>
               </div>
               {unidadeAtual && (
                 <p className="text-[11px] text-[#64748B]">
@@ -278,11 +276,11 @@ export function PainelPublicoPage() {
             title="Nenhuma unidade selecionada"
             description="Cadastre e ative uma unidade de saúde para visualizar o painel público."
             actionLabel="Voltar para o início"
-            actionTo="/"
+            actionTo={destinoVoltar}
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-            {/* Destaque Principal em Azul Cobalto */}
+            {/* Destaque principal */}
             <section
               className={`lg:col-span-7 rounded-[32px] bg-cobalt-gradient p-7 sm:p-10 text-white shadow-cobalt flex flex-col justify-between relative overflow-hidden min-h-[440px] ${
                 animarDestaque ? 'animate-call-highlight' : ''
@@ -293,22 +291,10 @@ export function PainelPublicoPage() {
                 className="pointer-events-none absolute -top-20 -right-20 h-72 w-72 rounded-full bg-white/15 blur-3xl"
               />
 
-              <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
-                <span className="glass-on-cobalt inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium">
-                  <Radio className="h-3.5 w-3.5 text-emerald-300 animate-pulse" />
-                  Chamada Atual
-                </span>
-
-                <span className="glass-on-cobalt inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Dados anonimizados · LGPD
-                </span>
-              </div>
-
               {chamadaAtual ? (
                 <div className="relative z-10 my-8">
                   <p className="text-sm uppercase tracking-[0.2em] text-white/75 font-medium">
-                    Senha de Atendimento
+                    Senha de atendimento
                   </p>
                   <div className="mt-3 flex flex-wrap items-baseline gap-4">
                     <span className="font-display text-6xl sm:text-8xl font-semibold tracking-tight leading-none">
@@ -332,7 +318,7 @@ export function PainelPublicoPage() {
                     </div>
 
                     <div className="glass-on-cobalt rounded-[24px] p-5 text-white">
-                      <p className="text-xs text-white/75">Horário e Situação</p>
+                      <p className="text-xs text-white/75">Horário e situação</p>
                       <p className="mt-1 font-display text-2xl font-medium">
                         {formatarHora(chamadaAtual.horarioChamada)}
                       </p>
@@ -345,7 +331,7 @@ export function PainelPublicoPage() {
               ) : (
                 <div className="relative z-10 my-auto py-12 text-center">
                   <p className="font-display text-3xl font-normal text-white">
-                    Aguardando próximas chamadas
+                    Aguardando a próxima chamada
                   </p>
                   <p className="mt-2 text-sm text-white/80 max-w-md mx-auto">
                     Assim que um profissional ou atendente chamar a próxima senha
@@ -367,14 +353,14 @@ export function PainelPublicoPage() {
               </div>
             </section>
 
-            {/* Coluna Lateral: Últimas Chamadas + Em Atendimento */}
+            {/* Coluna lateral */}
             <aside className="lg:col-span-5 flex flex-col gap-5">
-              {/* Últimas Chamadas */}
+              {/* Últimas chamadas */}
               <div className="flex-1 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col">
                 <div className="flex items-center justify-between gap-2 pb-4 border-b border-[#E2E8F0]">
                   <div>
                     <h2 className="font-display text-lg font-medium text-[#0F172A]">
-                      Últimas Chamadas
+                      Últimas chamadas
                     </h2>
                     <p className="text-xs text-[#64748B]">
                       Histórico recente exibido nesta recepção
@@ -437,11 +423,11 @@ export function PainelPublicoPage() {
                 )}
               </div>
 
-              {/* Em Atendimento + Nota LGPD */}
+              {/* Em atendimento */}
               <div className="rounded-[24px] bg-white border border-[#E2E8F0] p-5 shadow-soft space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-display text-sm font-semibold text-[#0F172A]">
-                    Senhas em Atendimento
+                    Senhas em atendimento
                   </h3>
                   <span className="text-xs text-[#64748B]">
                     {emAtendimento.length} ativa(s)
@@ -474,7 +460,7 @@ export function PainelPublicoPage() {
                     to="/paciente"
                     className="shrink-0 rounded-full bg-[#EFF4FB] px-3.5 py-1.5 text-xs font-semibold text-[#1E6BFF] hover:bg-[#DBEAFE] transition-colors"
                   >
-                    Portal do Cidadão →
+                    Portal do cidadão →
                   </Link>
                 </div>
               </div>

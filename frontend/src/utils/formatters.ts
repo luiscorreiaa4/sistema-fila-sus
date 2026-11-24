@@ -14,9 +14,7 @@ import type {
   TipoDeficiencia,
 } from '../types/api';
 
-// ============================================================================
 // Máscaras e normalização
-// ============================================================================
 
 export function somenteDigitos(valor: string): string {
   return valor.replace(/\D/g, '');
@@ -72,9 +70,7 @@ export function nullableTrim(valor: string | null | undefined): string | null {
   return limpo.length > 0 ? limpo : null;
 }
 
-// ============================================================================
 // Formatação de exibição
-// ============================================================================
 
 export function formatarCpf(cpf: string): string {
   const d = somenteDigitos(cpf);
@@ -100,9 +96,7 @@ export function formatarCns(cns: string): string {
   return `${d.slice(0, 3)} ${d.slice(3, 7)} ${d.slice(7, 11)} ${d.slice(11)}`;
 }
 
-/**
- * Formata datas YYYY-MM-DD ou ISO sem deslocamento de fuso horário para datas de nascimento/período.
- */
+// Datas YYYY-MM-DD são exibidas sem deslocamento de fuso.
 export function formatarData(valor: string | Date): string {
   if (valor instanceof Date) {
     if (Number.isNaN(valor.getTime())) return '—';
@@ -184,13 +178,11 @@ export function somarDiasIso(iso: string, dias: number): string {
   return dt.toISOString().slice(0, 10);
 }
 
-// ============================================================================
-// Rótulos de Enums e Constantes de Domínio
-// ============================================================================
+// Rótulos de enums e constantes de domínio
 
 export const LABELS_NIVEL_ACESSO: Record<NivelAcesso, string> = {
   ATENDENTE: 'Atendente',
-  PROFISSIONAL_SAUDE: 'Profissional de Saúde',
+  PROFISSIONAL_SAUDE: 'Profissional de saúde',
   ADMINISTRADOR: 'Administrador',
 };
 
@@ -201,8 +193,8 @@ export const LABELS_CATEGORIA_SERVICO: Record<CategoriaServico, string> = {
 };
 
 export const LABELS_MODO_ACESSO: Record<ModoAcessoServico, string> = {
-  DIRETO: 'Acesso Direto',
-  REGULADO: 'Acesso Regulado',
+  DIRETO: 'Acesso direto',
+  REGULADO: 'Acesso regulado',
 };
 
 export const LABELS_SITUACAO_AGENDA: Record<SituacaoAgenda, string> = {
@@ -216,12 +208,12 @@ export const LABELS_STATUS_AGENDAMENTO: Record<StatusAgendamento, string> = {
   AGENDADO: 'Agendado',
   REALIZADO: 'Realizado',
   CANCELADO: 'Cancelado',
-  NAO_REALIZADO: 'Não Realizado',
+  NAO_REALIZADO: 'Não realizado',
 };
 
 export const LABELS_ORIGEM_MARCACAO: Record<OrigemMarcacao, string> = {
-  APLICATIVO: 'Portal do Cidadão',
-  ASSISTIDA: 'Marcação Assistida',
+  APLICATIVO: 'Portal do cidadão',
+  ASSISTIDA: 'Marcação assistida',
 };
 
 export const LABELS_GRUPO_ATENDIMENTO: Record<GrupoAtendimento, string> = {
@@ -231,17 +223,17 @@ export const LABELS_GRUPO_ATENDIMENTO: Record<GrupoAtendimento, string> = {
 
 export const LABELS_CRITERIO_PRIORIDADE: Record<CriterioPrioridade, string> = {
   IDOSO_60_MAIS: 'Idoso (60+ anos)',
-  PCD: 'Pessoa com Deficiência (PcD)',
+  PCD: 'Pessoa com deficiência (PcD)',
   AMBOS: 'Idoso 60+ e PcD',
-  PADRAO: 'Atendimento Padrão',
+  PADRAO: 'Atendimento padrão',
 };
 
 export const LABELS_SITUACAO_FILA: Record<SituacaoFila, string> = {
   AGUARDANDO: 'Aguardando',
   CHAMADO: 'Chamado',
-  EM_ATENDIMENTO: 'Em Atendimento',
+  EM_ATENDIMENTO: 'Em atendimento',
   CONCLUIDO: 'Concluído',
-  NAO_ATENDIDO: 'Não Atendido',
+  NAO_ATENDIDO: 'Não atendido',
   CANCELADO: 'Cancelado',
 };
 
@@ -289,9 +281,7 @@ export const UFS_BRASIL = [
   'SP', 'SE', 'TO',
 ] as const;
 
-// ============================================================================
-// Alerta sonoro suave (Web Audio API) para o Painel Público
-// ============================================================================
+// Alerta sonoro do painel público, via Web Audio API
 
 export function tocarAlertaSonoroChamada(): void {
   try {
@@ -326,6 +316,6 @@ export function tocarAlertaSonoroChamada(): void {
       void ctx.close();
     }, 900);
   } catch {
-    // Navegador pode bloquear áudio antes de interação do usuário
+    // Alguns navegadores bloqueiam áudio antes de qualquer interação
   }
 }

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, HeartHandshake, ShieldCheck, Sparkles } from 'lucide-react';
+import { getHomeRouteByPerfil, useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import type { PacienteDTO } from '../types/api';
 import { PacienteCadastroForm } from '../components/forms/PacienteCadastroForm';
@@ -9,10 +10,32 @@ import { Navbar } from '../components/layout/Navbar';
 export function CadastroPacientePage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { login } = useAuth();
 
-  const handleSuccess = (paciente: PacienteDTO) => {
+  const handleSuccess = async (
+    paciente: PacienteDTO,
+    credenciais?: { cpf: string; senha: string }
+  ) => {
+    if (credenciais) {
+      try {
+        const resultado = await login({
+          cpf: credenciais.cpf,
+          senha: credenciais.senha,
+          tipoUsuario: 'PACIENTE',
+        });
+        toast.success(
+          'Cadastro concluído!',
+          `Bem-vindo(a), ${resultado.usuario.nomeExibicao}.`
+        );
+        navigate(getHomeRouteByPerfil(resultado.perfil), { replace: true });
+        return;
+      } catch {
+        // fallback para login caso a autenticação automática falhe
+      }
+    }
+
     toast.success(
-      'Autocadastro concluído',
+      'Cadastro concluído',
       `Conta criada para ${paciente.nomeExibicao}. Faça login com seu CPF.`
     );
     navigate('/login', {
@@ -39,7 +62,7 @@ export function CadastroPacientePage() {
               </Link>
 
               <h1 className="mt-4 font-display text-3xl sm:text-4xl font-normal tracking-tight text-[#0F172A]">
-                Autocadastro de Cidadão
+                Autocadastro de cidadão
               </h1>
               <p className="mt-2 text-sm text-[#64748B]">
                 Preencha seus dados civis e o Cartão Nacional de Saúde (CNS) para
@@ -53,23 +76,22 @@ export function CadastroPacientePage() {
           {/* Direita: Painel Institucional */}
           <div className="lg:col-span-5 lg:sticky lg:top-24">
             <BrandVisualPanel
-              eyebrow="Cadastro Nacional · SUS"
-              headline="Validação rápida de CPF, CNS e prioridade legal."
-              description="Seus dados são utilizados exclusivamente para identificar sua vaga e assegurar prioridade legal automática a idosos (60+) e pessoas com deficiência."
+              headline="CPF e CNS são conferidos no cadastro."
+              description="Seus dados servem para identificar sua vaga e aplicar a prioridade legal a idosos (60+) e pessoas com deficiência."
               badges={[
                 {
                   icon: <Sparkles className="h-4 w-4" />,
-                  title: 'Validação de CPF e CNS',
-                  subtitle: 'Algoritmo oficial verificado no cadastro',
+                  title: 'CPF e CNS conferidos',
+                  subtitle: 'Números verificados antes de salvar',
                 },
                 {
                   icon: <HeartHandshake className="h-4 w-4" />,
-                  title: 'Nome Social Respeitado',
-                  subtitle: 'Exibição garantida em todo atendimento interno',
+                  title: 'Nome social',
+                  subtitle: 'Exibido nos atendimentos internos',
                 },
                 {
                   icon: <ShieldCheck className="h-4 w-4" />,
-                  title: 'Conformidade LGPD',
+                  title: 'Privacidade',
                   subtitle: 'Seus dados nunca aparecem no painel da recepção',
                 },
               ]}

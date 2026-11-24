@@ -388,11 +388,11 @@ export function PacientePage() {
       <Navbar variant="portal" />
 
       <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        {/* Cabeçalho do Portal Mobile-First */}
+        {/* Cabeçalho do portal */}
         <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge tone="info">Portal do Cidadão</StatusBadge>
+              <StatusBadge tone="info">Portal do cidadão</StatusBadge>
               {perfilPaciente?.ehPrioritarioLegal && (
                 <StatusBadge tone="success">
                   Prioridade Legal ·{' '}
@@ -409,7 +409,7 @@ export function PacientePage() {
             </p>
           </div>
 
-          {/* Tabs Desktop em Pílula */}
+          {/* Abas no desktop */}
           <div className="hidden md:inline-flex items-center gap-1 rounded-full bg-[#EFF4FB] p-1.5 border border-[#DBEAFE]">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -433,9 +433,7 @@ export function PacientePage() {
           </div>
         </section>
 
-        {/* ================================================================
-            ABA 1 — MINHA POSIÇÃO NA FILA
-        ================================================================ */}
+        {/* Aba 1: minha posição na fila */}
         {aba === 'fila' && (
           <section className="space-y-6">
             {loadingFila ? (
@@ -473,7 +471,7 @@ export function PacientePage() {
 
                       <div className="relative z-10 my-6">
                         <p className="text-xs uppercase tracking-widest text-white/75">
-                          Sua Senha na Unidade
+                          Sua senha na unidade
                         </p>
                         <div className="mt-1 flex items-baseline justify-between gap-4">
                           <span className="font-display text-5xl sm:text-6xl font-semibold tracking-tight">
@@ -520,7 +518,7 @@ export function PacientePage() {
                               to={`/painel/${item.unidadeId}`}
                               className="rounded-full bg-white px-3.5 py-2 text-xs font-semibold text-[#1E6BFF] hover:bg-[#EFF4FB]"
                             >
-                              Ver Painel TV →
+                              Ver painel TV
                             </Link>
                           </div>
                         )}
@@ -540,7 +538,7 @@ export function PacientePage() {
                   <div>
                     <span className="glass-on-cobalt inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium">
                       <Activity className="h-3.5 w-3.5" />
-                      Fila Presencial do Dia
+                      Fila presencial do dia
                     </span>
                     <h2 className="mt-5 font-display text-2xl sm:text-3xl font-normal">
                       Você ainda não realizou check-in hoje
@@ -557,13 +555,13 @@ export function PacientePage() {
                       variant="white"
                       onClick={() => trocarAba('agendar')}
                     >
-                      Agendar Novo Atendimento
+                      Agendar novo atendimento
                     </PillButton>
                     <Link
                       to="/painel"
                       className="inline-flex items-center rounded-full glass-on-cobalt px-5 py-2.5 text-xs font-medium text-white hover:bg-white/25 transition-colors"
                     >
-                      Abrir Painel Público
+                      Abrir painel público
                     </Link>
                   </div>
                 </div>
@@ -571,7 +569,7 @@ export function PacientePage() {
                 <div className="lg:col-span-5 rounded-[28px] bg-white border border-[#E2E8F0] p-6 shadow-soft flex flex-col justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
-                      Próximo Agendamento
+                      Próximo agendamento
                     </p>
                     {proximoAgendamentoAtivo ? (
                       <div className="mt-4 space-y-3">
@@ -614,7 +612,7 @@ export function PacientePage() {
                     onClick={() => trocarAba('agendamentos')}
                     className="mt-6 text-left text-xs font-semibold text-[#1E6BFF] hover:text-[#1554D9]"
                   >
-                    Ver todos os meus agendamentos →
+                    Ver todos os meus agendamentos
                   </button>
                 </div>
               </div>
@@ -622,18 +620,16 @@ export function PacientePage() {
           </section>
         )}
 
-        {/* ================================================================
-            ABA 2 — AGENDAR ATENDIMENTO
-        ================================================================ */}
+        {/* Aba 2: agendar atendimento */}
         {aba === 'agendar' && (
           <section className="space-y-6">
             <div className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 sm:p-8 shadow-soft space-y-6">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-[#1E6BFF]">
-                  Marcação em 3 Passos
+                  Marcação em 3 passos
                 </span>
                 <h2 className="mt-1 font-display text-2xl font-normal text-[#0F172A]">
-                  Agendar Consulta ou Procedimento
+                  Agendar consulta ou procedimento
                 </h2>
                 <p className="mt-1 text-xs text-[#64748B]">
                   Selecione a unidade e o serviço desejado para visualizar os
@@ -648,7 +644,7 @@ export function PacientePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField label="1. Unidade de Saúde" htmlFor="ag-unidade">
+                  <FormField label="1. Unidade de saúde" htmlFor="ag-unidade">
                     <SelectInput
                       id="ag-unidade"
                       value={unidadeSel}
@@ -663,7 +659,7 @@ export function PacientePage() {
                     </SelectInput>
                   </FormField>
 
-                  <FormField label="2. Serviço / Especialidade" htmlFor="ag-servico">
+                  <FormField label="2. Serviço ou especialidade" htmlFor="ag-servico">
                     <SelectInput
                       id="ag-servico"
                       value={servicoSel}
@@ -683,7 +679,7 @@ export function PacientePage() {
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
-                    3. Horários Disponíveis ({vagas.length})
+                    3. Horários disponíveis ({vagas.length})
                   </h3>
                   {(unidadeSel || servicoSel) && (
                     <button
@@ -754,7 +750,7 @@ export function PacientePage() {
                                 fullWidth
                                 onClick={() => setVagaConfirmando(vaga)}
                               >
-                                Selecionar Horário
+                                Selecionar horário
                               </PillButton>
                             </div>
                           ))}
@@ -768,16 +764,14 @@ export function PacientePage() {
           </section>
         )}
 
-        {/* ================================================================
-            ABA 3 — MEUS AGENDAMENTOS
-        ================================================================ */}
+        {/* Aba 3: meus agendamentos */}
         {aba === 'agendamentos' && (
           <section className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3">
               <h2 className="font-display text-2xl font-normal text-[#0F172A]">
-                Meus Agendamentos
+                Meus agendamentos
               </h2>
-              <div className="inline-flex flex-wrap gap-1 rounded-full bg-white border border-[#E2E8F0] p-1">
+              <div className="grid grid-cols-2 sm:inline-flex w-full sm:w-auto gap-1 rounded-2xl sm:rounded-full bg-white border border-[#E2E8F0] p-1">
                 {(
                   [
                     { id: 'TODOS', label: 'Todos' },
@@ -790,7 +784,7 @@ export function PacientePage() {
                     key={item.id}
                     type="button"
                     onClick={() => setFiltroStatusAg(item.id)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                    className={`w-full sm:w-auto text-center rounded-xl sm:rounded-full px-3.5 py-2 sm:py-1.5 text-xs font-medium transition-colors ${
                       filtroStatusAg === item.id
                         ? 'bg-[#1E6BFF] text-white'
                         : 'text-[#64748B] hover:text-[#0F172A]'
@@ -812,7 +806,7 @@ export function PacientePage() {
                 icon={<ClipboardList className="h-6 w-6" />}
                 title="Nenhum agendamento encontrado"
                 description="Seus agendamentos de consultas e procedimentos aparecerão listados aqui com protocolo e senha."
-                actionLabel="Agendar Atendimento"
+                actionLabel="Agendar atendimento"
                 onAction={() => trocarAba('agendar')}
               />
             ) : (
@@ -884,9 +878,7 @@ export function PacientePage() {
           </section>
         )}
 
-        {/* ================================================================
-            ABA 4 — MEU PERFIL
-        ================================================================ */}
+        {/* Aba 4: meu perfil */}
         {aba === 'perfil' && (
           <section className="rounded-[28px] bg-white border border-[#E2E8F0] p-6 sm:p-8 shadow-soft space-y-6">
             {loadingPerfil || !perfilPaciente ? (
@@ -899,10 +891,10 @@ export function PacientePage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#E2E8F0]">
                   <div>
                     <h2 className="font-display text-2xl font-normal text-[#0F172A]">
-                      Meus Dados Cadastrais
+                      Meus dados cadastrais
                     </h2>
                     <p className="mt-1 text-xs text-[#64748B]">
-                      CPF, Cartão SUS e data de nascimento são imutáveis pelo
+                      CPF, Cartão SUS e data de nascimento não podem ser alterados pelo
                       portal para preservar seu histórico assistencial.
                     </p>
                   </div>
@@ -911,16 +903,16 @@ export function PacientePage() {
                   </StatusBadge>
                 </div>
 
-                {/* Dados imutáveis */}
+                {/* Dados fixos */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                   <div className="rounded-2xl bg-[#F4F7FC] p-4">
-                    <p className="text-[11px] text-[#64748B]">Nome Civil</p>
+                    <p className="text-[11px] text-[#64748B]">Nome civil</p>
                     <p className="mt-1 text-sm font-semibold text-[#0F172A]">
                       {perfilPaciente.nomeCompleto}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-[#F4F7FC] p-4">
-                    <p className="text-[11px] text-[#64748B]">CPF (Imutável)</p>
+                    <p className="text-[11px] text-[#64748B]">CPF (não alterável)</p>
                     <p className="mt-1 text-sm font-semibold text-[#0F172A]">
                       {perfilPaciente.cpfFormatado}
                     </p>
@@ -932,7 +924,7 @@ export function PacientePage() {
                     </p>
                   </div>
                   <div className="rounded-2xl bg-[#F4F7FC] p-4">
-                    <p className="text-[11px] text-[#64748B]">Data de Nascimento</p>
+                    <p className="text-[11px] text-[#64748B]">Data de nascimento</p>
                     <p className="mt-1 text-sm font-semibold text-[#0F172A]">
                       {formatarData(perfilPaciente.dataNascimento)}
                     </p>
@@ -1117,7 +1109,7 @@ export function PacientePage() {
 
                   <div className="flex justify-end pt-2">
                     <PillButton type="submit" loading={salvandoPerfil}>
-                      Salvar Alterações
+                      Salvar alterações
                     </PillButton>
                   </div>
                 </form>
@@ -1127,7 +1119,7 @@ export function PacientePage() {
         )}
       </main>
 
-      {/* Barra de Navegação Inferior Mobile */}
+      {/* Navegação inferior (mobile) */}
       <nav
         aria-label="Navegação do cidadão"
         className="md:hidden fixed bottom-3 left-3 right-3 z-40 rounded-full bg-white/95 backdrop-blur-md border border-[#E2E8F0] p-1.5 shadow-soft grid grid-cols-4 gap-1"
@@ -1157,7 +1149,7 @@ export function PacientePage() {
       <Modal
         open={Boolean(vagaConfirmando)}
         onClose={() => setVagaConfirmando(null)}
-        title="Confirmar Agendamento"
+        title="Confirmar agendamento"
         subtitle="Revise os detalhes do horário antes de reservar sua vaga."
         footer={
           <>
@@ -1172,7 +1164,7 @@ export function PacientePage() {
               loading={marcando}
               onClick={() => void handleConfirmarAgendamento()}
             >
-              Confirmar Reserva
+              Confirmar reserva
             </PillButton>
           </>
         }
@@ -1213,7 +1205,7 @@ export function PacientePage() {
           setComprovante(null);
           trocarAba('agendamentos');
         }}
-        title="Agendamento Confirmado"
+        title="Agendamento confirmado"
         footer={
           <PillButton
             onClick={() => {
@@ -1221,7 +1213,7 @@ export function PacientePage() {
               trocarAba('agendamentos');
             }}
           >
-            Ir para Meus Agendamentos
+            Ir para meus agendamentos
           </PillButton>
         }
       >
@@ -1231,7 +1223,7 @@ export function PacientePage() {
               <CheckCircle2 className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-xs text-[#64748B]">Protocolo de Atendimento</p>
+              <p className="text-xs text-[#64748B]">Protocolo de atendimento</p>
               <p className="mt-1 font-display text-2xl font-semibold text-[#1E6BFF]">
                 {comprovante.protocolo}
               </p>
@@ -1258,7 +1250,7 @@ export function PacientePage() {
       <Modal
         open={Boolean(agendamentoParaCancelar)}
         onClose={() => setAgendamentoParaCancelar(null)}
-        title="Cancelar Agendamento"
+        title="Cancelar agendamento"
         subtitle="A vaga será liberada imediatamente para outros cidadãos."
       >
         {agendamentoParaCancelar && (
@@ -1285,7 +1277,7 @@ export function PacientePage() {
                 id="motivo-cancel"
                 value={motivoCancelamento}
                 onChange={(e) => setMotivoCancelamento(e.target.value)}
-                placeholder="Ex.: Conflito de horário pessoal, impossibilidade de comparecer..."
+                placeholder="Ex.: conflito de horário, impossibilidade de comparecer"
               />
             </FormField>
 
@@ -1295,10 +1287,10 @@ export function PacientePage() {
                 hideIconCircle
                 onClick={() => setAgendamentoParaCancelar(null)}
               >
-                Manter Agendamento
+                Manter agendamento
               </PillButton>
               <PillButton type="submit" variant="danger" loading={cancelando}>
-                Confirmar Cancelamento
+                Confirmar cancelamento
               </PillButton>
             </div>
           </form>
